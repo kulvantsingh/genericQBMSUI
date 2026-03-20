@@ -28,7 +28,6 @@ import {
   ComprehensiveForm,
   Field,
   Preview,
-  SharedEditor,
   Spinner,
   StatCard,
   Toast,
@@ -37,7 +36,7 @@ import {
 export default function App() {
   const [state, dispatch] = useReducer(reducer, INIT);
   const [preview, setPreview] = useState(null);
-  const [activeEditor, setActiveEditor] = useState(null);
+  const [activeFieldId, setActiveFieldId] = useState(null);
   const [themeMode, setThemeMode] = useState("dark");
   const [fontScale, setFontScale] = useState(1);
   const [meta, setMeta] = useState(DEFAULT_META);
@@ -45,17 +44,6 @@ export default function App() {
   const showToast = useCallback((message, kind = "success") => {
     dispatch({ type: "TOAST", value: { msg: message, kind } });
     setTimeout(() => dispatch({ type: "TOAST", value: null }), 3500);
-  }, []);
-
-  const openEditor = useCallback((config) => {
-    setActiveEditor({
-      ...config,
-      sessionKey: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    });
-  }, []);
-
-  const closeEditor = useCallback(() => {
-    setActiveEditor(null);
   }, []);
 
   const refresh = useCallback(
@@ -82,8 +70,8 @@ export default function App() {
   }, [refresh]);
 
   useEffect(() => {
-    closeEditor();
-  }, [closeEditor, state.view, state.activeType, state.editingId]);
+    setActiveFieldId(null);
+  }, [state.view, state.activeType, state.editingId]);
 
   useEffect(() => {
     const saved = localStorage.getItem("fontScale");
@@ -200,7 +188,7 @@ export default function App() {
   };
 
   return (
-    <EditorContext.Provider value={{ openEditor }}>
+    <EditorContext.Provider value={{ activeFieldId, setActiveFieldId }}>
       <div
         style={{
           ...THEME_VARS[themeMode],
@@ -592,7 +580,6 @@ export default function App() {
             onClose={() => dispatch({ type: "TOAST", value: null })}
           />
         )}
-        <SharedEditor activeEditor={activeEditor} onClose={closeEditor} />
       </div>
     </EditorContext.Provider>
   );

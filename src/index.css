@@ -84,6 +84,17 @@ select option {
   color: var(--text-primary) !important;
 }
 
+.inline-rich-editor--compact .ck.ck-editor__main > .ck-editor__editable,
+.inline-rich-editor--compact .ck.ck-content {
+  min-height: 56px !important;
+  max-height: 140px;
+}
+
+.inline-rich-editor--expanded .ck.ck-editor__main > .ck-editor__editable,
+.inline-rich-editor--expanded .ck.ck-content {
+  min-height: 180px !important;
+}
+
 .ck.ck-editor__editable p,
 .ck.ck-editor__editable li,
 .ck.ck-editor__editable a,

@@ -62,7 +62,7 @@ export const inputStyle = {
   background: "var(--input-bg)",
   border: "1px solid var(--border-color)",
   borderRadius: 10,
-  padding: "10px 14px",
+  padding: "8px 12px",
   color: "var(--text-primary)",
   fontSize: 14,
   outline: "none",

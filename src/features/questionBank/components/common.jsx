@@ -1,5 +1,10 @@
-import { useContext } from "react";
+import { useContext, useEffect, useId, useRef } from "react";
+import { CKEditor } from "@ckeditor/ckeditor5-react";
+import { ClassicEditor } from "ckeditor5";
+import "ckeditor5/ckeditor5.css";
+
 import { EditorContext } from "../editorContext";
+import { getEditorConfig } from "../editorConfig";
 import { stripHtml } from "../questionUtils";
 
 export function Toast({ msg, kind, onClose }) {
@@ -216,12 +221,82 @@ export function Field({
   rich = as === "textarea" || type === "text",
 }) {
   const editorContext = useContext(EditorContext);
+  const fieldId = useId();
+  const editorContainerRef = useRef(null);
+  const editorInstanceRef = useRef(null);
+  const isRichEditorOpen = editorContext?.activeFieldId === fieldId;
+
+  const focusEditorAtEnd = (editor) => {
+    if (!editor) return;
+
+    requestAnimationFrame(() => {
+      editor.model.change((writer) => {
+        writer.setSelection(
+          writer.createPositionAt(editor.model.document.getRoot(), "end")
+        );
+      });
+      editor.editing.view.focus();
+    });
+  };
+
+  useEffect(() => {
+    if (!isRichEditorOpen) {
+      editorInstanceRef.current = null;
+      return;
+    }
+
+    if (editorInstanceRef.current) {
+      focusEditorAtEnd(editorInstanceRef.current);
+    }
+  }, [isRichEditorOpen]);
+
+  useEffect(() => {
+    if (!isRichEditorOpen) return undefined;
+
+    const handleClickOutside = (event) => {
+      const target = event.target;
+
+      if (target instanceof Element) {
+        const trigger = target.closest("[data-rich-trigger='true']");
+        if (trigger) {
+          const nextFieldId = trigger.getAttribute("data-rich-field-id");
+          if (nextFieldId) {
+            editorContext?.setActiveFieldId(nextFieldId);
+            return;
+          }
+        }
+      }
+
+      if (
+        editorContainerRef.current &&
+        target instanceof Node &&
+        editorContainerRef.current.contains(target)
+      ) {
+        return;
+      }
+
+      if (target instanceof Element && target.closest(".ck-body-wrapper")) {
+        return;
+      }
+
+      editorContext?.setActiveFieldId(null);
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [editorContext, isRichEditorOpen]);
+
   const style = {
     width: "100%",
     background: "var(--input-bg)",
     border: "1px solid var(--border-color)",
     borderRadius: 10,
-    padding: "11px 14px",
+    padding: "8px 12px",
     color: "var(--text-primary)",
     fontSize: 14,
     outline: "none",
@@ -243,43 +318,68 @@ export function Field({
           {children}
         </select>
       ) : rich ? (
-        <button
-          type="button"
-          onClick={() =>
-            !disabled &&
-            editorContext?.openEditor({
-              label: label || placeholder || "Editor",
-              value: value || "",
-              placeholder,
-              compact: as !== "textarea",
-              onChange: (nextValue) => onChange?.({ target: { value: nextValue } }),
-            })
-          }
-          disabled={disabled}
-          style={{
-            width: "100%",
-            border: "1px solid var(--border-color)",
-            borderRadius: 10,
-            background: "var(--input-bg)",
-            opacity: disabled ? 0.65 : 1,
-            minHeight: as === "textarea" ? 116 : 68,
-            padding: "12px 14px",
-            color: "var(--text-primary)",
-            textAlign: "left",
-            cursor: disabled ? "not-allowed" : "pointer",
-          }}
-        >
-          {stripHtml(value || "") ? (
-            <div
-              style={{ color: "var(--text-primary)", lineHeight: 1.5 }}
-              dangerouslySetInnerHTML={{ __html: value || "" }}
-            />
-          ) : (
-            <div style={{ color: "var(--text-muted)" }}>
-              {placeholder || "Click to edit in CKEditor"}
+        isRichEditorOpen ? (
+          <div
+            ref={editorContainerRef}
+            className={`inline-rich-editor ${
+              as === "textarea"
+                ? "inline-rich-editor--expanded"
+                : "inline-rich-editor--compact"
+            }`}
+            style={{
+              width: "100%",
+              border: "1px solid var(--border-color)",
+              borderRadius: 10,
+              background: "var(--input-bg)",
+              opacity: disabled ? 0.65 : 1,
+              overflow: "hidden",
+            }}
+          >
+            <div style={{ padding: 6 }}>
+              <CKEditor
+                editor={ClassicEditor}
+                config={getEditorConfig(placeholder, as !== "textarea")}
+                data={value || ""}
+                onReady={(editor) => {
+                  editorInstanceRef.current = editor;
+                  focusEditorAtEnd(editor);
+                }}
+                onChange={(_, editor) => onChange?.({ target: { value: editor.getData() } })}
+              />
             </div>
-          )}
-        </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => !disabled && editorContext?.setActiveFieldId(fieldId)}
+            disabled={disabled}
+            data-rich-trigger="true"
+            data-rich-field-id={fieldId}
+            style={{
+              width: "100%",
+              border: "1px solid var(--border-color)",
+              borderRadius: 10,
+              background: "var(--input-bg)",
+              opacity: disabled ? 0.65 : 1,
+              minHeight: 42,
+              padding: "8px 12px",
+              color: "var(--text-primary)",
+              textAlign: "left",
+              cursor: disabled ? "not-allowed" : "pointer",
+            }}
+          >
+            {stripHtml(value || "") ? (
+              <div
+                style={{ color: "var(--text-primary)", lineHeight: 0 }}
+                dangerouslySetInnerHTML={{ __html: value || "" }}
+              />
+            ) : (
+              <div style={{ color: "var(--text-muted)" }}>
+                {placeholder || "Click to edit in CKEditor"}
+              </div>
+            )}
+          </button>
+        )
       ) : as === "textarea" ? (
         <textarea
           value={value}
