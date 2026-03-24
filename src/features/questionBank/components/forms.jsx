@@ -106,6 +106,55 @@ const areStringArraysEqual = (left, right) =>
 const areNumberArraysEqual = (left, right) =>
   left.length === right.length && left.every((item, index) => item === right[index]);
 
+function mapSubQuestionSingleAndMulti(fromType, toType, item) {
+  const options =
+    Array.isArray(item.options) && item.options.length > 0
+      ? [...item.options]
+      : ["", "", "", ""];
+
+  const base = {
+    type: toType,
+    question: item.question || "",
+    explanation: item.explanation || "",
+    points: Math.max(1, Number(item.points) || 1),
+    options,
+  };
+
+  if (toType === TYPES.MULTI_CORRECT) {
+    const nextCorrectAnswers =
+      fromType === TYPES.MCQ
+        ? item.correctAnswer == null
+          ? []
+          : [item.correctAnswer]
+        : Array.isArray(item.correctAnswers)
+          ? item.correctAnswers
+          : [];
+
+    return {
+      ...base,
+      correctAnswers: [...new Set(nextCorrectAnswers)].filter(
+        (index) => Number.isInteger(index) && index >= 0 && index < options.length
+      ),
+    };
+  }
+
+  const fallbackFromMulti =
+    Array.isArray(item.correctAnswers) && item.correctAnswers.length > 0
+      ? item.correctAnswers[0]
+      : null;
+
+  const nextCorrectAnswer =
+    fromType === TYPES.MULTI_CORRECT ? fallbackFromMulti : item.correctAnswer ?? null;
+
+  return {
+    ...base,
+    correctAnswer:
+      Number.isInteger(nextCorrectAnswer) && nextCorrectAnswer >= 0 && nextCorrectAnswer < options.length
+        ? nextCorrectAnswer
+        : null,
+  };
+}
+
 function MCQForm({ form, onPatch }) {
   const [history, setHistory] = useState([]);
   const [future, setFuture] = useState([]);
@@ -1001,15 +1050,78 @@ export function AnswerConfiguration({ type, form, onPatch }) {
 }
 
 function SubQuestionEditor({ item, index, onChange, onRemove }) {
-  const handleTypeChange = (nextType) => {
-    if (nextType === item.type) return;
+  const toSingleMultiSnapshot = (source) => {
+    const options =
+      Array.isArray(source.options) && source.options.length > 0
+        ? [...source.options]
+        : ["", "", "", ""];
 
-    const nextItem = createSubQuestion(nextType);
-    onChange({
-      ...nextItem,
-      __uiId: item.__uiId,
-      explanation: item.explanation || "",
-      points: item.points || 1,
+    return {
+      type: source.type,
+      question: source.question || "",
+      explanation: source.explanation || "",
+      points: Math.max(1, Number(source.points) || 1),
+      options,
+      correctAnswer:
+        source.type === TYPES.MCQ && Number.isInteger(source.correctAnswer)
+          ? source.correctAnswer
+          : null,
+      correctAnswers:
+        source.type === TYPES.MULTI_CORRECT && Array.isArray(source.correctAnswers)
+          ? [...source.correctAnswers]
+          : [],
+    };
+  };
+
+  const handleTypeChange = (nextType) => {
+    onChange((currentItem) => {
+      if (nextType === currentItem.type) return currentItem;
+
+      const isCurrentSingleOrMulti =
+        currentItem.type === TYPES.MCQ || currentItem.type === TYPES.MULTI_CORRECT;
+      const isTargetSingleOrMulti =
+        nextType === TYPES.MCQ || nextType === TYPES.MULTI_CORRECT;
+      const currentSharedSnapshot = currentItem.__singleMultiShared || null;
+      const nextSharedSnapshot = isCurrentSingleOrMulti
+        ? toSingleMultiSnapshot(currentItem)
+        : currentSharedSnapshot;
+      let nextItem;
+
+      if (isTargetSingleOrMulti) {
+        if (nextSharedSnapshot) {
+          if (nextSharedSnapshot.type === nextType) {
+            nextItem = {
+              ...createSubQuestion(nextType),
+              ...nextSharedSnapshot,
+              type: nextType,
+            };
+          } else {
+            nextItem = {
+              ...createSubQuestion(nextType),
+              ...mapSubQuestionSingleAndMulti(
+                nextSharedSnapshot.type,
+                nextType,
+                nextSharedSnapshot
+              ),
+            };
+          }
+        } else if (isCurrentSingleOrMulti) {
+          nextItem = {
+            ...createSubQuestion(nextType),
+            ...mapSubQuestionSingleAndMulti(currentItem.type, nextType, currentItem),
+          };
+        } else {
+          nextItem = createSubQuestion(nextType);
+        }
+      } else {
+        nextItem = createSubQuestion(nextType);
+      }
+
+      return {
+        ...nextItem,
+        __uiId: currentItem.__uiId,
+        __singleMultiShared: nextSharedSnapshot,
+      };
     });
   };
 
@@ -1031,7 +1143,6 @@ function SubQuestionEditor({ item, index, onChange, onRemove }) {
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
             {CHILD_TYPES.map((type) => {
               const isActive = item.type === type;
-//Removed dropdown for sub-question type selection, as it was not discoverable and less efficient than buttons for this use case
               return (
                 <button
                   key={type}
@@ -1085,7 +1196,9 @@ function SubQuestionEditor({ item, index, onChange, onRemove }) {
         as="textarea"
         rows={2}
         value={item.question}
-        onChange={(event) => onChange({ ...item, question: event.target.value })}
+        onChange={(event) =>
+          onChange((currentItem) => ({ ...currentItem, question: event.target.value }))
+        }
         placeholder="Enter the related question..."
       />
 
@@ -1105,7 +1218,7 @@ function SubQuestionEditor({ item, index, onChange, onRemove }) {
         <AnswerConfiguration
           type={item.type}
           form={item}
-          onPatch={(patch) => onChange({ ...item, ...patch })}
+          onPatch={(patch) => onChange((currentItem) => ({ ...currentItem, ...patch }))}
         />
       </div>
 
@@ -1115,10 +1228,10 @@ function SubQuestionEditor({ item, index, onChange, onRemove }) {
           type="number"
           value={item.points}
           onChange={(event) =>
-            onChange({
-              ...item,
+            onChange((currentItem) => ({
+              ...currentItem,
               points: Math.max(1, parseInt(event.target.value, 10) || 1),
-            })
+            }))
           }
         />
         <Field
@@ -1126,7 +1239,12 @@ function SubQuestionEditor({ item, index, onChange, onRemove }) {
           as="textarea"
           rows={2}
           value={item.explanation}
-          onChange={(event) => onChange({ ...item, explanation: event.target.value })}
+          onChange={(event) =>
+            onChange((currentItem) => ({
+              ...currentItem,
+              explanation: event.target.value,
+            }))
+          }
           placeholder="Optional explanation for this sub-question..."
         />
       </div>
@@ -1140,6 +1258,7 @@ export function ComprehensiveForm({ form, onPatch }) {
   const [future, setFuture] = useState([]);
   const didLocalPatchRef = useRef(false);
   const nextSubQuestionIdRef = useRef(1);
+  const subQuestionsRef = useRef(subQuestions);
 
   const cloneSubQuestions = (items) =>
     JSON.parse(JSON.stringify(items || []));
@@ -1158,6 +1277,7 @@ export function ComprehensiveForm({ form, onPatch }) {
     );
 
   useEffect(() => {
+    subQuestionsRef.current = subQuestions;
     const maxExistingId = (subQuestions || []).reduce((maxValue, item) => {
       const match = /^subq-(\d+)$/.exec(item.__uiId || "");
       return match ? Math.max(maxValue, Number(match[1])) : maxValue;
@@ -1180,18 +1300,21 @@ export function ComprehensiveForm({ form, onPatch }) {
     const normalized = ensureSubQuestionIds(subQuestions);
     if (areSubQuestionsEqual(subQuestions, normalized)) return;
     didLocalPatchRef.current = true;
+    subQuestionsRef.current = normalized;
     onPatch({ subQuestions: normalized });
   }, [onPatch, subQuestions]);
 
   const patchSubQuestions = (nextSubQuestions) => {
+    const currentSubQuestions = subQuestionsRef.current || [];
     const normalizedNextSubQuestions = ensureSubQuestionIds(nextSubQuestions);
-    if (areSubQuestionsEqual(subQuestions, normalizedNextSubQuestions)) return;
+    if (areSubQuestionsEqual(currentSubQuestions, normalizedNextSubQuestions)) return;
     setHistory((previous) => [
       ...previous.slice(-59),
-      cloneSubQuestions(subQuestions),
+      cloneSubQuestions(currentSubQuestions),
     ]);
     setFuture([]);
     didLocalPatchRef.current = true;
+    subQuestionsRef.current = normalizedNextSubQuestions;
     onPatch({ subQuestions: normalizedNextSubQuestions });
   };
 
@@ -1201,11 +1324,13 @@ export function ComprehensiveForm({ form, onPatch }) {
       const nextHistory = [...previous];
       const snapshot = nextHistory.pop();
       if (snapshot) {
+        const currentSubQuestions = subQuestionsRef.current || [];
         setFuture((upcoming) => [
           ...upcoming.slice(-59),
-          cloneSubQuestions(subQuestions),
+          cloneSubQuestions(currentSubQuestions),
         ]);
         didLocalPatchRef.current = true;
+        subQuestionsRef.current = snapshot;
         onPatch({ subQuestions: snapshot });
       }
       return nextHistory;
@@ -1218,20 +1343,39 @@ export function ComprehensiveForm({ form, onPatch }) {
       const nextFuture = [...previous];
       const snapshot = nextFuture.pop();
       if (snapshot) {
+        const currentSubQuestions = subQuestionsRef.current || [];
         setHistory((past) => [
           ...past.slice(-59),
-          cloneSubQuestions(subQuestions),
+          cloneSubQuestions(currentSubQuestions),
         ]);
         didLocalPatchRef.current = true;
+        subQuestionsRef.current = snapshot;
         onPatch({ subQuestions: snapshot });
       }
       return nextFuture;
     });
   };
 
-  const updateSubQuestion = (index, value) => {
+  const updateSubQuestion = (targetId, fallbackIndex, valueOrUpdater) => {
+    const currentSubQuestions = subQuestionsRef.current || [];
     patchSubQuestions(
-      subQuestions.map((item, itemIndex) => (itemIndex === index ? value : item))
+      currentSubQuestions.map((entry, itemIndex) => {
+        const isMatch = targetId ? entry.__uiId === targetId : itemIndex === fallbackIndex;
+        if (!isMatch) return entry;
+        return typeof valueOrUpdater === "function"
+          ? valueOrUpdater(entry)
+          : valueOrUpdater;
+      })
+    );
+  };
+
+  const removeSubQuestion = (targetId, fallbackIndex) => {
+    const currentSubQuestions = subQuestionsRef.current || [];
+    patchSubQuestions(
+      currentSubQuestions.filter(
+        (entry, itemIndex) =>
+          targetId ? entry.__uiId !== targetId : itemIndex !== fallbackIndex
+      )
     );
   };
 
@@ -1262,13 +1406,16 @@ export function ComprehensiveForm({ form, onPatch }) {
           key={item.__uiId || index}
           item={item}
           index={index}
-          onChange={(value) => updateSubQuestion(index, value)}
-          onRemove={() => patchSubQuestions(subQuestions.filter((_, itemIndex) => itemIndex !== index))}
+          onChange={(value) => updateSubQuestion(item.__uiId, index, value)}
+          onRemove={() => removeSubQuestion(item.__uiId, index)}
         />
       ))}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-        <Btn ghost onClick={() => patchSubQuestions([...subQuestions, createSubQuestion()])}>
+        <Btn
+          ghost
+          onClick={() => patchSubQuestions([...(subQuestionsRef.current || []), createSubQuestion()])}
+        >
           + Add Sub-question
         </Btn>
         <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>
