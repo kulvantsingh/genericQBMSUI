@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useReducer, useState } from "react";
+import "./styles/app-layout.css";
+import cdacLogo from "./assets/cdac.png";
 
 import {
   DEFAULT_META,
@@ -30,16 +32,146 @@ import {
   Preview,
   Spinner,
   StatCard,
+  ThemeToggle,
   Toast,
 } from "./features/questionBank/components";
+
+const THEME_STORAGE_KEY = "themeMode";
+
+function getInitialThemeMode() {
+  try {
+    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    if (savedTheme === "dark" || savedTheme === "light") return savedTheme;
+  } catch {
+    // Ignore localStorage access issues and fall back to default.
+  }
+
+  return "light";
+}
+
+function NavIcon({ name }) {
+  const common = {
+    width: 18,
+    height: 18,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+  };
+
+  if (name === "menu") {
+    return (
+      <svg {...common}>
+        <path d="M4 7h16M4 12h16M4 17h16" />
+      </svg>
+    );
+  }
+
+  if (name === "plus") {
+    return (
+      <svg {...common}>
+        <path d="M12 5v14M5 12h14" />
+      </svg>
+    );
+  }
+
+  if (name === "refresh") {
+    return (
+      <svg {...common}>
+        <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+        <path d="M21 3v6h-6" />
+      </svg>
+    );
+  }
+
+  if (name === "home") {
+    return (
+      <svg {...common}>
+        <path d="M3 10.5L12 4l9 6.5" />
+        <path d="M5 9.5V20h14V9.5" />
+      </svg>
+    );
+  }
+
+  if (name === "question") {
+    return (
+      <svg {...common}>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M9.8 9.2a2.4 2.4 0 0 1 4.4 1.2c0 1.8-2.2 2.2-2.2 3.8" />
+        <circle cx="12" cy="16.8" r="0.8" fill="currentColor" stroke="none" />
+      </svg>
+    );
+  }
+
+  if (name === "exam") {
+    return (
+      <svg {...common}>
+        <path d="M7 3.5h10a2 2 0 0 1 2 2V20l-4-2-3 2-3-2-4 2V5.5a2 2 0 0 1 2-2z" />
+        <path d="M9 8h6M9 12h6" />
+      </svg>
+    );
+  }
+
+  if (name === "chevronDown") {
+    return (
+      <svg {...common}>
+        <path d="m6 9 6 6 6-6" />
+      </svg>
+    );
+  }
+
+  if (name === "chevronUp") {
+    return (
+      <svg {...common}>
+        <path d="m18 15-6-6-6 6" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg {...common}>
+      <path d="M8 6h13M8 12h13M8 18h13" />
+      <circle cx="4" cy="6" r="1.5" />
+      <circle cx="4" cy="12" r="1.5" />
+      <circle cx="4" cy="18" r="1.5" />
+    </svg>
+  );
+}
 
 export default function App() {
   const [state, dispatch] = useReducer(reducer, INIT);
   const [preview, setPreview] = useState(null);
   const [activeFieldId, setActiveFieldId] = useState(null);
-  const [themeMode, setThemeMode] = useState("dark");
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [sidebarSections, setSidebarSections] = useState({
+    question: true,
+    exam: false,
+  });
+  const [themeMode, setThemeMode] = useState(getInitialThemeMode);
   const [fontScale, setFontScale] = useState(1);
   const [meta, setMeta] = useState(DEFAULT_META);
+  const statAccents =
+    themeMode === "light"
+      ? {
+          total: "#40404c",
+          mcq: "#577cb7",
+          true_false: "#b16c96",
+          multi_correct: "#9a3e76",
+          match_pair: "#d4a0bc",
+          arrange_sequence: "#cca4cc",
+          comprehensive: "#40404c",
+        }
+      : {
+          total: "#7c6aff",
+          mcq: "#7c6aff",
+          true_false: "#00e5a0",
+          multi_correct: "#ff9f43",
+          match_pair: "#ff6b9d",
+          arrange_sequence: "#ffd166",
+          comprehensive: "#4cc9f0",
+        };
 
   const showToast = useCallback((message, kind = "success") => {
     dispatch({ type: "TOAST", value: { msg: message, kind } });
@@ -82,6 +214,10 @@ export default function App() {
     localStorage.setItem("fontScale", fontScale);
   }, [fontScale]);
 
+  useEffect(() => {
+    localStorage.setItem(THEME_STORAGE_KEY, themeMode);
+  }, [themeMode]);
+
   const handleFilter = useCallback(
     (key, value) => {
       const nextFilters = { ...state.filters, [key]: value };
@@ -89,6 +225,14 @@ export default function App() {
       refresh(nextFilters);
     },
     [refresh, state.filters]
+  );
+
+  const handleTypeCardFilter = useCallback(
+    (type) => {
+      const nextType = state.filters.type === type ? "" : type;
+      handleFilter("type", nextType);
+    },
+    [handleFilter, state.filters.type]
   );
 
   const handleSave = useCallback(async () => {
@@ -103,7 +247,7 @@ export default function App() {
       const payload = buildPayload(state.activeType, state.form, meta);
       if (state.editingId) {
         await api.update(state.editingId, payload);
-        showToast(`Updated question ${state.editingId}`);
+        showToast("Question updated");
       } else {
         await api.create(payload);
         showToast("Created question");
@@ -145,6 +289,19 @@ export default function App() {
       questionType: question.type,
       form: toEditableForm(question),
     });
+  }, []);
+
+  const goListView = useCallback(() => {
+    dispatch({ type: "VIEW", value: "list" });
+    dispatch({ type: "EDIT_CLEAR" });
+  }, []);
+
+  const goCreateView = useCallback(() => {
+    dispatch({ type: "VIEW", value: "create" });
+  }, []);
+
+  const toggleSidebarSection = useCallback((section) => {
+    setSidebarSections((current) => ({ ...current, [section]: !current[section] }));
   }, []);
 
   const renderMainForm = () => {
@@ -192,49 +349,32 @@ export default function App() {
       <div
         style={{
           ...THEME_VARS[themeMode],
-          minHeight: "100vh",
+          minHeight: `${100 / fontScale}vh`,
           background: "var(--app-bg)",
-          fontFamily: "'Sora', 'Segoe UI', sans-serif",
+          fontFamily: "'Segoe UI', sans-serif",
           color: "var(--text-primary)",
           zoom: fontScale,
         }}
       >
         <div
+          className="app-top-nav"
           style={{
-            background: "var(--nav-bg)",
-            borderBottom: "1px solid var(--border-color)",
-            padding: "0 32px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            height: 64,
+            marginLeft: isSidebarCollapsed ? 76 : 246,
+            transition: "margin-left .2s ease",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div
-              style={{
-                background: "linear-gradient(135deg,#7c6aff,#5b4fff)",
-                borderRadius: 12,
-                padding: "8px 12px",
-                fontSize: 20,
-              }}
-            >
-              QB
+          <div className="app-top-nav-left">
+            <div className="app-top-nav-logo-wrap">
+              <img src={cdacLogo} alt="CDAC logo" className="app-top-nav-logo" />
             </div>
             <div>
-              <div style={{ fontWeight: 800, fontSize: 18 }}>Question Bank</div>
-              <div
-                style={{
-                  color: "var(--text-muted)",
-                  fontSize: 12,
-                  fontFamily: "'Space Mono', monospace",
-                }}
-              >
-                SPRING BOOT REST - 8082 - {state.stats.total} QUESTIONS
+              <div className="app-top-nav-title">Question Bank</div>
+              <div className="app-top-nav-subtitle">
+                {state.stats.total} QUESTIONS
               </div>
             </div>
           </div>
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <div className="app-top-nav-actions">
             <Btn
               ghost
               onClick={() =>
@@ -251,40 +391,170 @@ export default function App() {
             >
               A+
             </Btn>
-            <Btn
-              ghost
-              onClick={() =>
+            <ThemeToggle
+              isDark={themeMode === "dark"}
+              onToggle={() =>
                 setThemeMode((current) => (current === "dark" ? "light" : "dark"))
               }
-            >
-              {themeMode === "dark" ? "Light Mode" : "Dark Mode"}
-            </Btn>
+            />
             {state.view !== "list" ? (
-              <Btn
-                variant="secondary"
-                onClick={() => {
-                  dispatch({ type: "VIEW", value: "list" });
-                  dispatch({ type: "EDIT_CLEAR" });
-                }}
-              >
+              <Btn variant="secondary" onClick={goListView}>
                 Back
               </Btn>
             ) : (
-              <Btn onClick={() => dispatch({ type: "VIEW", value: "create" })}>
+              <Btn onClick={goCreateView}>
                 + New Question
               </Btn>
             )}
           </div>
         </div>
 
-        <div
+        <aside
+          className="app-sidebar"
           style={{
-            width: "90%",
-            maxWidth: "none",
-            margin: "0 auto",
-            padding: "32px 24px",
+            width: isSidebarCollapsed ? 76 : 246,
+            transition: "width .2s ease",
           }}
         >
+          <div
+            className="app-sidebar-header"
+            style={{
+              justifyContent: isSidebarCollapsed ? "center" : "space-between",
+              padding: isSidebarCollapsed ? "0 10px" : "0 16px",
+            }}
+          >
+            {!isSidebarCollapsed && (
+              <div>
+                <div className="app-sidebar-brand-title">Question</div>
+                <div className="app-sidebar-brand-subtitle">Bank</div>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => setIsSidebarCollapsed((current) => !current)}
+              className="app-sidebar-collapse-btn"
+            >
+              <NavIcon name="menu" />
+            </button>
+          </div>
+
+          <div className="app-sidebar-content">
+            <button
+              type="button"
+              onClick={goListView}
+              className="sidebar-row-btn sidebar-row-muted"
+              style={{
+                padding: isSidebarCollapsed ? "10px 8px" : "10px 6px",
+                justifyContent: isSidebarCollapsed ? "center" : "flex-start",
+              }}
+            >
+              <span className="sidebar-row-chevron">
+                <NavIcon name="home" />
+              </span>
+              {!isSidebarCollapsed && <span>Dashboard</span>}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => !isSidebarCollapsed && toggleSidebarSection("question")}
+              className="sidebar-row-btn sidebar-row-primary"
+              style={{
+                padding: isSidebarCollapsed ? "10px 8px" : "10px 6px",
+                justifyContent: isSidebarCollapsed ? "center" : "space-between",
+              }}
+            >
+              <span className="sidebar-row-main">
+                <span className="sidebar-row-chevron">
+                  <NavIcon name="question" />
+                </span>
+                {!isSidebarCollapsed && <span>Question</span>}
+              </span>
+              {!isSidebarCollapsed && (
+                <span className="sidebar-row-chevron">
+                  <NavIcon name={sidebarSections.question ? "chevronUp" : "chevronDown"} />
+                </span>
+              )}
+            </button>
+
+            {!isSidebarCollapsed && sidebarSections.question && (
+              <div className="sidebar-submenu">
+                {[
+                  {
+                    key: "create-question",
+                    label: "Create New Question",
+                    active: state.view === "create",
+                    action: goCreateView,
+                  },
+                  {
+                    key: "all-question",
+                    label: "All Question",
+                    active: state.view === "list",
+                    action: goListView,
+                  },
+                  {
+                    key: "question-category",
+                    label: "Question Category",
+                    active: false,
+                    action: () => showToast("Question Category view coming soon", "warn"),
+                  },
+                ].map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={item.action}
+                    className={`sidebar-submenu-btn ${item.active ? "active" : ""}`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => !isSidebarCollapsed && toggleSidebarSection("exam")}
+              className="sidebar-row-btn sidebar-row-muted"
+              style={{
+                marginTop: 10,
+                padding: isSidebarCollapsed ? "10px 8px" : "10px 6px",
+                justifyContent: isSidebarCollapsed ? "center" : "space-between",
+              }}
+            >
+              <span className="sidebar-row-main">
+                <span className="sidebar-row-chevron">
+                  <NavIcon name="exam" />
+                </span>
+                {!isSidebarCollapsed && <span>Exam</span>}
+              </span>
+              {!isSidebarCollapsed && (
+                <span className="sidebar-row-chevron">
+                  <NavIcon name={sidebarSections.exam ? "chevronUp" : "chevronDown"} />
+                </span>
+              )}
+            </button>
+
+            {!isSidebarCollapsed && sidebarSections.exam && (
+              <div className="sidebar-submenu">
+                <button
+                  type="button"
+                  onClick={() => showToast("Exam module coming soon", "warn")}
+                  className="sidebar-submenu-btn"
+                >
+                  Exam Dashboard
+                </button>
+              </div>
+            )}
+          </div>
+        </aside>
+
+        <div
+          className="app-main-content"
+          style={{
+            marginLeft: isSidebarCollapsed ? 76 : 246,
+            transition: "margin-left .2s ease",
+          }}
+        >
+          <div className="app-main-content-inner">
           {state.view === "list" && (
             <>
               <div
@@ -295,32 +565,54 @@ export default function App() {
                   marginBottom: 32,
                 }}
               >
-                <StatCard label="Total" value={state.stats.total} accent="#7c6aff" />
-                <StatCard label="MCQ" value={state.stats.byType?.mcq || 0} accent="#7c6aff" />
+                <StatCard
+                  label="Total"
+                  value={state.stats.total}
+                  accent={statAccents.total}
+                  active={!state.filters.type}
+                  onClick={() => handleFilter("type", "")}
+                />
+                <StatCard
+                  label="MCQ"
+                  value={state.stats.byType?.mcq || 0}
+                  accent={statAccents.mcq}
+                  active={state.filters.type === TYPES.MCQ}
+                  onClick={() => handleTypeCardFilter(TYPES.MCQ)}
+                />
                 <StatCard
                   label="True/False"
                   value={state.stats.byType?.true_false || 0}
-                  accent="#00e5a0"
+                  accent={statAccents.true_false}
+                  active={state.filters.type === TYPES.TRUE_FALSE}
+                  onClick={() => handleTypeCardFilter(TYPES.TRUE_FALSE)}
                 />
                 <StatCard
                   label="Multi-Correct"
                   value={state.stats.byType?.multi_correct || 0}
-                  accent="#ff9f43"
+                  accent={statAccents.multi_correct}
+                  active={state.filters.type === TYPES.MULTI_CORRECT}
+                  onClick={() => handleTypeCardFilter(TYPES.MULTI_CORRECT)}
                 />
                 <StatCard
                   label="Match Pair"
                   value={state.stats.byType?.match_pair || 0}
-                  accent="#ff6b9d"
+                  accent={statAccents.match_pair}
+                  active={state.filters.type === TYPES.MATCH_PAIR}
+                  onClick={() => handleTypeCardFilter(TYPES.MATCH_PAIR)}
                 />
                 <StatCard
                   label="Sequence"
                   value={state.stats.byType?.arrange_sequence || 0}
-                  accent="#ffd166"
+                  accent={statAccents.arrange_sequence}
+                  active={state.filters.type === TYPES.ARRANGE_SEQUENCE}
+                  onClick={() => handleTypeCardFilter(TYPES.ARRANGE_SEQUENCE)}
                 />
                 <StatCard
                   label="Comprehensive"
                   value={state.stats.byType?.comprehensive || 0}
-                  accent="#4cc9f0"
+                  accent={statAccents.comprehensive}
+                  active={state.filters.type === TYPES.COMPREHENSIVE}
+                  onClick={() => handleTypeCardFilter(TYPES.COMPREHENSIVE)}
                 />
               </div>
 
@@ -346,7 +638,6 @@ export default function App() {
                   />
                 </div>
                 {[
-                  { key: "type", options: [["", "All Types"], ...Object.entries(TYPE_LABEL)] },
                   {
                     key: "difficulty",
                     options: [["", "All Levels"], ...DIFFS.map((item) => [item, item])],
@@ -434,7 +725,8 @@ export default function App() {
                       onClick={() => !state.editingId && dispatch({ type: "QTYPE", value: type })}
                       disabled={!!state.editingId}
                       style={{
-                        padding: "14px 10px",
+                        padding: "18px 10px",
+                        minHeight: 96,
                         borderRadius: 14,
                         cursor: state.editingId ? "not-allowed" : "pointer",
                         textAlign: "center",
@@ -445,7 +737,18 @@ export default function App() {
                         fontSize: 13,
                       }}
                     >
-                      <div style={{ fontSize: 22, marginBottom: 4 }}>{TYPE_ICON[type]}</div>
+                      <div style={{ marginBottom: 6, display: "flex", justifyContent: "center" }}>
+                        <img
+                          src={TYPE_ICON[type]}
+                          alt={`${TYPE_LABEL[type]} icon`}
+                          style={{
+                            width: 50,
+                            height: 44,
+                            objectFit: "contain",
+                            filter: "var(--type-icon-filter, none)",
+                          }}
+                        />
+                      </div>
                       {TYPE_LABEL[type]}
                     </button>
                   );
@@ -457,7 +760,7 @@ export default function App() {
                   label={
                     state.activeType === TYPES.COMPREHENSIVE
                       ? "Statement / Passage *"
-                      : "Question Text *"
+                      : "Question *"
                   }
                   as="textarea"
                   rows={state.activeType === TYPES.COMPREHENSIVE ? 6 : 3}
@@ -468,8 +771,19 @@ export default function App() {
                   placeholder={
                     state.activeType === TYPES.COMPREHENSIVE
                       ? "Enter the common statement or passage here..."
-                      : "Enter your question here..."
+                    : "Enter your question here..."
                   }
+                />
+
+                <Field
+                  label="Instruction (optional)"
+                  as="textarea"
+                  rows={2}
+                  value={state.form.instruction || ""}
+                  onChange={(event) =>
+                    dispatch({ type: "FORM", value: { instruction: event.target.value } })
+                  }
+                  placeholder="Add optional instructions for students..."
                 />
 
                 {renderMainForm()}
@@ -535,14 +849,17 @@ export default function App() {
                 {state.errors.length > 0 && (
                   <div
                     style={{
-                      background: "#ff3b5c22",
-                      border: "1px solid #ff3b5c44",
+                      background: "var(--danger-soft-bg)",
+                      border: "1px solid var(--danger-border)",
                       borderRadius: 12,
                       padding: "14px 18px",
                     }}
                   >
                     {state.errors.map((error, index) => (
-                      <div key={index} style={{ color: "#ff3b5c", fontSize: 14, fontWeight: 600 }}>
+                      <div
+                        key={index}
+                        style={{ color: "var(--danger)", fontSize: 14, fontWeight: 600 }}
+                      >
                         {error}
                       </div>
                     ))}
@@ -563,13 +880,14 @@ export default function App() {
                     {state.saving
                       ? "Saving..."
                       : state.editingId
-                        ? `Update ${state.editingId}`
+                        ? `Update`
                         : "Save Question"}
                   </Btn>
                 </div>
               </div>
             </div>
           )}
+          </div>
         </div>
 
         {preview && <Preview question={preview} onClose={() => setPreview(null)} />}

@@ -1,4 +1,27 @@
-import { BASE_URL } from "./constants";
+import { BASE_URL, TYPES } from "./constants";
+
+const KNOWN_TYPES = new Set(Object.values(TYPES));
+
+function normaliseTypeKey(typeKey) {
+  return String(typeKey || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+}
+
+function normaliseStats(stats = {}) {
+  const byType = Object.entries(stats.byType || {}).reduce((accumulator, [rawType, count]) => {
+    const type = normaliseTypeKey(rawType);
+    if (!KNOWN_TYPES.has(type)) return accumulator;
+    return { ...accumulator, [type]: Number(count) || 0 };
+  }, {});
+
+  return {
+    ...stats,
+    total: Number(stats.total) || 0,
+    byType,
+  };
+}
 
 export const api = {
   async request(method, path = "", body = null) {
@@ -34,7 +57,7 @@ export const api = {
     return this.request("GET", query ? `?${query}` : "");
   },
   getStats() {
-    return this.request("GET", "/stats");
+    return this.request("GET", "/stats").then(normaliseStats);
   },
   create(body) {
     return this.request("POST", "", body);

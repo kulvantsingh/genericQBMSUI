@@ -53,6 +53,7 @@ export function createSubQuestion(type = TYPES.MCQ) {
 export const blank = {
   mcq: () => ({
     question: "",
+    instruction: "",
     options: ["", "", "", ""],
     correctAnswer: null,
     explanation: "",
@@ -60,12 +61,14 @@ export const blank = {
   }),
   true_false: () => ({
     question: "",
+    instruction: "",
     correctAnswer: null,
     explanation: "",
     points: 1,
   }),
   multi_correct: () => ({
     question: "",
+    instruction: "",
     options: ["", "", "", ""],
     correctAnswers: [],
     explanation: "",
@@ -73,12 +76,14 @@ export const blank = {
   }),
   arrange_sequence: () => ({
     question: "",
+    instruction: "",
     options: ["", "", "", ""],
     explanation: "",
     points: 1,
   }),
   match_pair: () => ({
     question: "Match the following:",
+    instruction: "",
     pairs: [
       { left: "", right: "" },
       { left: "", right: "" },
@@ -89,6 +94,7 @@ export const blank = {
   }),
   comprehensive: () => ({
     question: "",
+    instruction: "",
     explanation: "",
     subQuestions: [createSubQuestion()],
   }),
@@ -149,6 +155,7 @@ export function buildPayload(type, form, meta) {
   const base = {
     type,
     question: form.question,
+    instruction: form.instruction || null,
     explanation: form.explanation || null,
     points: form.points || 1,
     difficulty: meta.difficulty,
@@ -320,6 +327,7 @@ export function toEditableForm(question) {
 
   return {
     question: question.question,
+    instruction: question.instruction || "",
     explanation: question.explanation || "",
     points: question.points || 1,
     ...(question.type === TYPES.MCQ
