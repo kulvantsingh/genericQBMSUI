@@ -1031,7 +1031,7 @@ function SubQuestionEditor({ item, index, onChange, onRemove }) {
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
             {CHILD_TYPES.map((type) => {
               const isActive = item.type === type;
-
+//Removed dropdown for sub-question type selection, as it was not discoverable and less efficient than buttons for this use case
               return (
                 <button
                   key={type}
