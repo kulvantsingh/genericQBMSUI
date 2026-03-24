@@ -399,6 +399,10 @@ export function Field({
         return;
       }
 
+      if (target instanceof Element && target.closest("button")) {
+        return;
+      }
+
       if (target instanceof Element && target.closest(".ck-body-wrapper")) {
         return;
       }

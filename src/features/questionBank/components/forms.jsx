@@ -13,9 +13,12 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import undoIcon from "../../../assets/ui/return.png";
+import redoIcon from "../../../assets/ui/redo.png";
 
 import {
   CHILD_TYPES,
+  TYPE_ICON,
   TYPE_LABEL,
   TYPES,
   removeButtonStyle,
@@ -23,31 +26,224 @@ import {
 import { createSubQuestion, sumSubQuestionPoints } from "../questionUtils";
 import { Btn, Field } from "./common";
 
+function UndoIconButton({ onClick, disabled }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      title="Undo"
+      aria-label="Undo"
+      style={{
+        width: 30,
+        height: 30,
+        borderRadius: "50%",
+        border: "none",
+        background: "transparent",
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.45 : 1,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 0,
+      }}
+    >
+      <img
+        src={undoIcon}
+        alt=""
+        aria-hidden="true"
+        style={{
+          width: 24,
+          height: 24,
+          objectFit: "contain",
+          // filter: "var(--type-icon-filter, none)",
+        }}
+      />
+    </button>
+  );
+}
+
+function RedoIconButton({ onClick, disabled }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      title="Redo"
+      aria-label="Redo"
+      style={{
+        width: 30,
+        height: 30,
+        borderRadius: "50%",
+        border: "none",
+        background: "transparent",
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.45 : 1,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 0,
+      }}
+    >
+      <img
+        src={redoIcon}
+        alt=""
+        aria-hidden="true"
+        style={{
+          width: 24,
+          height: 24,
+          objectFit: "contain",
+          // filter: "var(--type-icon-filter, none)",
+        }}
+      />
+    </button>
+  );
+}
+
+const areStringArraysEqual = (left, right) =>
+  left.length === right.length && left.every((item, index) => item === right[index]);
+
+const areNumberArraysEqual = (left, right) =>
+  left.length === right.length && left.every((item, index) => item === right[index]);
+
 function MCQForm({ form, onPatch }) {
+  const [history, setHistory] = useState([]);
+  const [future, setFuture] = useState([]);
+  const didLocalPatchRef = useRef(false);
+  const nextOptionIdRef = useRef(1);
+  const [optionIds, setOptionIds] = useState(() =>
+    form.options.map(() => `mcq-opt-${nextOptionIdRef.current++}`)
+  );
+
+  useEffect(() => {
+    setOptionIds((previous) => {
+      if (previous.length === form.options.length) return previous;
+      if (previous.length > form.options.length) {
+        return previous.slice(0, form.options.length);
+      }
+      const additions = Array.from(
+        { length: form.options.length - previous.length },
+        () => `mcq-opt-${nextOptionIdRef.current++}`
+      );
+      return [...previous, ...additions];
+    });
+  }, [form.options.length]);
+
+  useEffect(() => {
+    if (!didLocalPatchRef.current) {
+      setHistory([]);
+      setFuture([]);
+    }
+    didLocalPatchRef.current = false;
+  }, [form.options, form.correctAnswer]);
+
+  const patchMcq = (nextValue, nextIds = optionIds) => {
+    const nextOptions = nextValue.options ?? form.options;
+    const nextCorrectAnswer =
+      nextValue.correctAnswer !== undefined
+        ? nextValue.correctAnswer
+        : form.correctAnswer;
+
+    if (
+      areStringArraysEqual(nextOptions, form.options) &&
+      nextCorrectAnswer === form.correctAnswer
+    ) {
+      return;
+    }
+
+    setHistory((previous) => [
+      ...previous.slice(-59),
+      {
+        options: [...form.options],
+        correctAnswer: form.correctAnswer,
+        optionIds: [...optionIds],
+      },
+    ]);
+    setFuture([]);
+    didLocalPatchRef.current = true;
+    setOptionIds(nextIds);
+    onPatch({ options: nextOptions, correctAnswer: nextCorrectAnswer });
+  };
+
+  const undo = () => {
+    setHistory((previous) => {
+      if (previous.length === 0) return previous;
+      const nextHistory = [...previous];
+      const snapshot = nextHistory.pop();
+      if (snapshot) {
+        setFuture((upcoming) => [
+          ...upcoming.slice(-59),
+          {
+            options: [...form.options],
+            correctAnswer: form.correctAnswer,
+            optionIds: [...optionIds],
+          },
+        ]);
+        didLocalPatchRef.current = true;
+        setOptionIds(snapshot.optionIds || optionIds);
+        onPatch({
+          options: snapshot.options || [],
+          correctAnswer: snapshot.correctAnswer ?? null,
+        });
+      }
+      return nextHistory;
+    });
+  };
+
+  const redo = () => {
+    setFuture((previous) => {
+      if (previous.length === 0) return previous;
+      const nextFuture = [...previous];
+      const snapshot = nextFuture.pop();
+      if (snapshot) {
+        setHistory((past) => [
+          ...past.slice(-59),
+          {
+            options: [...form.options],
+            correctAnswer: form.correctAnswer,
+            optionIds: [...optionIds],
+          },
+        ]);
+        didLocalPatchRef.current = true;
+        setOptionIds(snapshot.optionIds || optionIds);
+        onPatch({
+          options: snapshot.options || [],
+          correctAnswer: snapshot.correctAnswer ?? null,
+        });
+      }
+      return nextFuture;
+    });
+  };
+
   const setOption = (index, value) => {
     const options = [...form.options];
     options[index] = value;
-    onPatch({ options });
+    patchMcq({ options });
   };
 
   const removeOption = (index) => {
     const options = form.options.filter((_, optionIndex) => optionIndex !== index);
+    const nextIds = optionIds.filter((_, optionIndex) => optionIndex !== index);
     const correctAnswer =
       form.correctAnswer === index
         ? null
         : form.correctAnswer > index
           ? form.correctAnswer - 1
           : form.correctAnswer;
-    onPatch({ options, correctAnswer });
+    patchMcq({ options, correctAnswer }, nextIds);
   };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 6, marginBottom: -4 }}>
+        <UndoIconButton onClick={undo} disabled={history.length === 0} />
+        <RedoIconButton onClick={redo} disabled={future.length === 0} />
+      </div>
       {form.options.map((option, index) => (
-        <div key={index} style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <div key={optionIds[index] || `mcq-fallback-${index}`} style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <button
             type="button"
-            onClick={() => onPatch({ correctAnswer: index })}
+            onClick={() => patchMcq({ correctAnswer: index })}
             style={{
               width: 22,
               height: 22,
@@ -73,7 +269,14 @@ function MCQForm({ form, onPatch }) {
         </div>
       ))}
       {form.options.length < 8 && (
-        <Btn small ghost onClick={() => onPatch({ options: [...form.options, ""] })}>
+        <Btn
+          small
+          ghost
+          onClick={() => {
+            const nextIds = [...optionIds, `mcq-opt-${nextOptionIdRef.current++}`];
+            patchMcq({ options: [...form.options, ""] }, nextIds);
+          }}
+        >
           + Add Option
         </Btn>
       )}
@@ -125,31 +328,141 @@ function TrueFalseForm({ form, onPatch }) {
 }
 
 function MultiCorrectForm({ form, onPatch }) {
+  const [history, setHistory] = useState([]);
+  const [future, setFuture] = useState([]);
+  const didLocalPatchRef = useRef(false);
+  const nextOptionIdRef = useRef(1);
+  const [optionIds, setOptionIds] = useState(() =>
+    form.options.map(() => `multi-opt-${nextOptionIdRef.current++}`)
+  );
+
+  useEffect(() => {
+    setOptionIds((previous) => {
+      if (previous.length === form.options.length) return previous;
+      if (previous.length > form.options.length) {
+        return previous.slice(0, form.options.length);
+      }
+      const additions = Array.from(
+        { length: form.options.length - previous.length },
+        () => `multi-opt-${nextOptionIdRef.current++}`
+      );
+      return [...previous, ...additions];
+    });
+  }, [form.options.length]);
+
+  useEffect(() => {
+    if (!didLocalPatchRef.current) {
+      setHistory([]);
+      setFuture([]);
+    }
+    didLocalPatchRef.current = false;
+  }, [form.options, form.correctAnswers]);
+
+  const patchMultiCorrect = (nextValue, nextIds = optionIds) => {
+    const nextOptions = nextValue.options ?? form.options;
+    const nextCorrectAnswers = nextValue.correctAnswers ?? form.correctAnswers;
+
+    if (
+      areStringArraysEqual(nextOptions, form.options) &&
+      areNumberArraysEqual(nextCorrectAnswers, form.correctAnswers)
+    ) {
+      return;
+    }
+
+    setHistory((previous) => [
+      ...previous.slice(-59),
+      {
+        options: [...form.options],
+        correctAnswers: [...form.correctAnswers],
+        optionIds: [...optionIds],
+      },
+    ]);
+    setFuture([]);
+    didLocalPatchRef.current = true;
+    setOptionIds(nextIds);
+    onPatch({ options: nextOptions, correctAnswers: nextCorrectAnswers });
+  };
+
+  const undo = () => {
+    setHistory((previous) => {
+      if (previous.length === 0) return previous;
+      const nextHistory = [...previous];
+      const snapshot = nextHistory.pop();
+      if (snapshot) {
+        setFuture((upcoming) => [
+          ...upcoming.slice(-59),
+          {
+            options: [...form.options],
+            correctAnswers: [...form.correctAnswers],
+            optionIds: [...optionIds],
+          },
+        ]);
+        didLocalPatchRef.current = true;
+        setOptionIds(snapshot.optionIds || optionIds);
+        onPatch({
+          options: snapshot.options || [],
+          correctAnswers: snapshot.correctAnswers || [],
+        });
+      }
+      return nextHistory;
+    });
+  };
+
+  const redo = () => {
+    setFuture((previous) => {
+      if (previous.length === 0) return previous;
+      const nextFuture = [...previous];
+      const snapshot = nextFuture.pop();
+      if (snapshot) {
+        setHistory((past) => [
+          ...past.slice(-59),
+          {
+            options: [...form.options],
+            correctAnswers: [...form.correctAnswers],
+            optionIds: [...optionIds],
+          },
+        ]);
+        didLocalPatchRef.current = true;
+        setOptionIds(snapshot.optionIds || optionIds);
+        onPatch({
+          options: snapshot.options || [],
+          correctAnswers: snapshot.correctAnswers || [],
+        });
+      }
+      return nextFuture;
+    });
+  };
+
   const setOption = (index, value) => {
     const options = [...form.options];
     options[index] = value;
-    onPatch({ options });
+    patchMultiCorrect({ options });
   };
 
   const toggle = (index) => {
     const correctAnswers = form.correctAnswers.includes(index)
       ? form.correctAnswers.filter((value) => value !== index)
       : [...form.correctAnswers, index];
-    onPatch({ correctAnswers });
+    patchMultiCorrect({ correctAnswers });
   };
 
   const removeOption = (index) => {
     const options = form.options.filter((_, optionIndex) => optionIndex !== index);
+    const nextIds = optionIds.filter((_, optionIndex) => optionIndex !== index);
     const correctAnswers = form.correctAnswers
       .filter((value) => value !== index)
       .map((value) => (value > index ? value - 1 : value));
-    onPatch({ options, correctAnswers });
+    patchMultiCorrect({ options, correctAnswers }, nextIds);
   };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 6, marginBottom: -4 }}>
+        <UndoIconButton onClick={undo} disabled={history.length === 0} />
+        <RedoIconButton onClick={redo} disabled={future.length === 0} />
+      </div>
       {form.options.map((option, index) => (
-        <div key={index} style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <div key={optionIds[index] || `multi-fallback-${index}`} style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <button
             type="button"
             onClick={() => toggle(index)}
@@ -188,7 +501,14 @@ function MultiCorrectForm({ form, onPatch }) {
         </div>
       ))}
       {form.options.length < 8 && (
-        <Btn small ghost onClick={() => onPatch({ options: [...form.options, ""] })}>
+        <Btn
+          small
+          ghost
+          onClick={() => {
+            const nextIds = [...optionIds, `multi-opt-${nextOptionIdRef.current++}`];
+            patchMultiCorrect({ options: [...form.options, ""] }, nextIds);
+          }}
+        >
           + Add Option
         </Btn>
       )}
@@ -283,6 +603,9 @@ function SequenceSortableRow({
 }
 
 function ArrangeSequenceForm({ form, onPatch }) {
+  const [history, setHistory] = useState([]);
+  const [future, setFuture] = useState([]);
+  const didLocalPatchRef = useRef(false);
   const [activeId, setActiveId] = useState(null);
   const [overId, setOverId] = useState(null);
   const [itemIds, setItemIds] = useState(() =>
@@ -315,25 +638,84 @@ function ArrangeSequenceForm({ form, onPatch }) {
     });
   }, [form.options.length]);
 
+  useEffect(() => {
+    if (!didLocalPatchRef.current) {
+      setHistory([]);
+      setFuture([]);
+    }
+    didLocalPatchRef.current = false;
+  }, [form.options]);
+
+  const patchSequence = (nextOptions, nextIds = itemIds) => {
+    if (
+      areStringArraysEqual(nextOptions, form.options) &&
+      areNumberArraysEqual(nextIds, itemIds)
+    ) {
+      return;
+    }
+    setHistory((previous) => [
+      ...previous.slice(-59),
+      { options: [...form.options], itemIds: [...itemIds] },
+    ]);
+    setFuture([]);
+    didLocalPatchRef.current = true;
+    setItemIds(nextIds);
+    onPatch({ options: nextOptions });
+  };
+
+  const undo = () => {
+    setHistory((previous) => {
+      if (previous.length === 0) return previous;
+      const nextHistory = [...previous];
+      const snapshot = nextHistory.pop();
+      if (snapshot) {
+        setFuture((upcoming) => [
+          ...upcoming.slice(-59),
+          { options: [...form.options], itemIds: [...itemIds] },
+        ]);
+        didLocalPatchRef.current = true;
+        setItemIds(snapshot.itemIds || itemIds);
+        onPatch({ options: snapshot.options || [] });
+      }
+      return nextHistory;
+    });
+  };
+
+  const redo = () => {
+    setFuture((previous) => {
+      if (previous.length === 0) return previous;
+      const nextFuture = [...previous];
+      const snapshot = nextFuture.pop();
+      if (snapshot) {
+        setHistory((past) => [
+          ...past.slice(-59),
+          { options: [...form.options], itemIds: [...itemIds] },
+        ]);
+        didLocalPatchRef.current = true;
+        setItemIds(snapshot.itemIds || itemIds);
+        onPatch({ options: snapshot.options || [] });
+      }
+      return nextFuture;
+    });
+  };
+
   const setItem = (index, value) => {
     const options = [...form.options];
     options[index] = value;
-    onPatch({ options });
+    patchSequence(options);
   };
 
   const removeItem = (index) => {
-    setItemIds((previous) => previous.filter((_, itemIndex) => itemIndex !== index));
+    const nextIds = itemIds.filter((_, itemIndex) => itemIndex !== index);
     const options = form.options.filter((_, optionIndex) => optionIndex !== index);
-    onPatch({ options });
+    patchSequence(options, nextIds);
   };
 
   const addItem = () => {
-    setItemIds((previous) => {
-      const id = nextIdRef.current;
-      nextIdRef.current += 1;
-      return [...previous, id];
-    });
-    onPatch({ options: [...form.options, ""] });
+    const id = nextIdRef.current;
+    nextIdRef.current += 1;
+    const nextIds = [...itemIds, id];
+    patchSequence([...form.options, ""], nextIds);
   };
 
   const sortableIds = itemIds;
@@ -353,8 +735,9 @@ function ArrangeSequenceForm({ form, onPatch }) {
       const fromIndex = itemIds.indexOf(active.id);
       const toIndex = itemIds.indexOf(over.id);
       if (fromIndex !== -1 && toIndex !== -1) {
-        setItemIds((previous) => arrayMove(previous, fromIndex, toIndex));
-        onPatch({ options: arrayMove(form.options, fromIndex, toIndex) });
+        const nextIds = arrayMove(itemIds, fromIndex, toIndex);
+        const nextOptions = arrayMove(form.options, fromIndex, toIndex);
+        patchSequence(nextOptions, nextIds);
       }
     }
     setActiveId(null);
@@ -368,6 +751,10 @@ function ArrangeSequenceForm({ form, onPatch }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 6, marginBottom: -4 }}>
+        <UndoIconButton onClick={undo} disabled={history.length === 0} />
+        <RedoIconButton onClick={redo} disabled={future.length === 0} />
+      </div>
       <p style={{ color: "var(--text-secondary)", fontSize: 13, margin: 0 }}>
         Enter the sequence items in the correct order. Students will arrange them in this order.
       </p>
@@ -426,15 +813,125 @@ function ArrangeSequenceForm({ form, onPatch }) {
 }
 
 function MatchPairForm({ form, onPatch }) {
+  const [history, setHistory] = useState([]);
+  const [future, setFuture] = useState([]);
+  const didLocalPatchRef = useRef(false);
+  const nextPairIdRef = useRef(1);
+  const [pairIds, setPairIds] = useState(() =>
+    form.pairs.map(() => `pair-${nextPairIdRef.current++}`)
+  );
+
+  useEffect(() => {
+    setPairIds((previous) => {
+      if (previous.length === form.pairs.length) return previous;
+      if (previous.length > form.pairs.length) {
+        return previous.slice(0, form.pairs.length);
+      }
+      const additions = Array.from(
+        { length: form.pairs.length - previous.length },
+        () => `pair-${nextPairIdRef.current++}`
+      );
+      return [...previous, ...additions];
+    });
+  }, [form.pairs.length]);
+
+  const clonePairs = (pairs) =>
+    pairs.map((pair) => ({
+      left: pair.left ?? "",
+      right: pair.right ?? "",
+    }));
+
+  const arePairsEqual = (leftPairs, rightPairs) => {
+    if (leftPairs.length !== rightPairs.length) return false;
+    return leftPairs.every(
+      (pair, index) =>
+        (pair.left ?? "") === (rightPairs[index]?.left ?? "") &&
+        (pair.right ?? "") === (rightPairs[index]?.right ?? "")
+    );
+  };
+
+  useEffect(() => {
+    if (!didLocalPatchRef.current) {
+      setHistory([]);
+      setFuture([]);
+    }
+    didLocalPatchRef.current = false;
+  }, [form.pairs]);
+
+  const patchPairs = (nextPairs, nextIds = pairIds) => {
+    if (arePairsEqual(form.pairs, nextPairs) && areStringArraysEqual(nextIds, pairIds)) {
+      return;
+    }
+    setHistory((previous) => [
+      ...previous.slice(-59),
+      { pairs: clonePairs(form.pairs), pairIds: [...pairIds] },
+    ]);
+    setFuture([]);
+    didLocalPatchRef.current = true;
+    setPairIds(nextIds);
+    onPatch({ pairs: nextPairs });
+  };
+
   const setPair = (index, side, value) => {
     const pairs = form.pairs.map((pair, pairIndex) =>
       pairIndex === index ? { ...pair, [side]: value } : pair
     );
-    onPatch({ pairs });
+    patchPairs(pairs);
+  };
+
+  const removePair = (index) => {
+    const nextIds = pairIds.filter((_, pairIndex) => pairIndex !== index);
+    patchPairs(form.pairs.filter((_, pairIndex) => pairIndex !== index), nextIds);
+  };
+
+  const addPair = () => {
+    const nextIds = [...pairIds, `pair-${nextPairIdRef.current++}`];
+    patchPairs([...form.pairs, { left: "", right: "" }], nextIds);
+  };
+
+  const undoPairEdit = () => {
+    setHistory((previous) => {
+      if (previous.length === 0) return previous;
+      const nextHistory = [...previous];
+      const previousPairs = nextHistory.pop();
+      if (previousPairs) {
+        setFuture((upcoming) => [
+          ...upcoming.slice(-59),
+          { pairs: clonePairs(form.pairs), pairIds: [...pairIds] },
+        ]);
+        didLocalPatchRef.current = true;
+        setPairIds(previousPairs.pairIds || pairIds);
+        onPatch({ pairs: previousPairs.pairs || [] });
+      }
+      return nextHistory;
+    });
+  };
+
+  const redoPairEdit = () => {
+    setFuture((previous) => {
+      if (previous.length === 0) return previous;
+      const nextFuture = [...previous];
+      const nextPairs = nextFuture.pop();
+      if (nextPairs) {
+        setHistory((past) => [
+          ...past.slice(-59),
+          { pairs: clonePairs(form.pairs), pairIds: [...pairIds] },
+        ]);
+        didLocalPatchRef.current = true;
+        setPairIds(nextPairs.pairIds || pairIds);
+        onPatch({ pairs: nextPairs.pairs || [] });
+      }
+      return nextFuture;
+    });
   };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 6, marginBottom: -4 }}>
+        <UndoIconButton onClick={undoPairEdit} disabled={history.length === 0} />
+        <RedoIconButton onClick={redoPairEdit} disabled={future.length === 0} />
+      </div>
+
       <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr auto", gap: 10 }}>
         <span style={{ color: "var(--brand-accent)", fontWeight: 700, fontSize: 13, textAlign: "center" }}>
           Column A
@@ -447,7 +944,7 @@ function MatchPairForm({ form, onPatch }) {
       </div>
       {form.pairs.map((pair, index) => (
         <div
-          key={index}
+          key={pairIds[index] || `pair-fallback-${index}`}
           style={{
             display: "grid",
             gridTemplateColumns: "1fr auto 1fr auto",
@@ -473,11 +970,7 @@ function MatchPairForm({ form, onPatch }) {
           {form.pairs.length > 2 ? (
             <button
               type="button"
-              onClick={() =>
-                onPatch({
-                  pairs: form.pairs.filter((_, pairIndex) => pairIndex !== index),
-                })
-              }
+              onClick={() => removePair(index)}
               style={removeButtonStyle}
             >
               &#x274C;
@@ -488,11 +981,7 @@ function MatchPairForm({ form, onPatch }) {
         </div>
       ))}
       {form.pairs.length < 10 && (
-        <Btn
-          small
-          ghost
-          onClick={() => onPatch({ pairs: [...form.pairs, { left: "", right: "" }] })}
-        >
+        <Btn small ghost onClick={addPair}>
           + Add Pair
         </Btn>
       )}
@@ -512,6 +1001,18 @@ export function AnswerConfiguration({ type, form, onPatch }) {
 }
 
 function SubQuestionEditor({ item, index, onChange, onRemove }) {
+  const handleTypeChange = (nextType) => {
+    if (nextType === item.type) return;
+
+    const nextItem = createSubQuestion(nextType);
+    onChange({
+      ...nextItem,
+      __uiId: item.__uiId,
+      explanation: item.explanation || "",
+      points: item.points || 1,
+    });
+  };
+
   return (
     <div
       style={{
@@ -526,27 +1027,52 @@ function SubQuestionEditor({ item, index, onChange, onRemove }) {
     >
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
         <div style={{ color: "var(--text-primary)", fontWeight: 700 }}>Question {index + 1}</div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <div style={{ minWidth: 180 }}>
-            <Field
-              as="select"
-              value={item.type}
-              onChange={(event) => {
-                const nextType = event.target.value;
-                const nextItem = createSubQuestion(nextType);
-                onChange({
-                  ...nextItem,
-                  explanation: item.explanation || "",
-                  points: item.points || 1,
-                });
-              }}
-            >
-              {CHILD_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {TYPE_LABEL[type]}
-                </option>
-              ))}
-            </Field>
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            {CHILD_TYPES.map((type) => {
+              const isActive = item.type === type;
+
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => handleTypeChange(type)}
+                  title={TYPE_LABEL[type]}
+                  aria-label={TYPE_LABEL[type]}
+                  aria-pressed={isActive}
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 10,
+                    border: `1px solid ${
+                      isActive
+                        ? "color-mix(in srgb, var(--brand-primary) 56%, var(--border-color) 44%)"
+                        : "var(--border-color)"
+                    }`,
+                    background: isActive
+                      ? "color-mix(in srgb, var(--brand-primary) 14%, var(--surface-bg) 86%)"
+                      : "var(--surface-bg)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: isActive ? "default" : "pointer",
+                    padding: 0,
+                  }}
+                >
+                  <img
+                    src={TYPE_ICON[type]}
+                    alt=""
+                    aria-hidden="true"
+                    style={{
+                      width: 20,
+                      height: 20,
+                      objectFit: "contain",
+                      filter: "var(--type-icon-filter, none)",
+                    }}
+                  />
+                </button>
+              );
+            })}
           </div>
           <Btn small danger onClick={onRemove}>
             Remove
@@ -610,15 +1136,112 @@ function SubQuestionEditor({ item, index, onChange, onRemove }) {
 
 export function ComprehensiveForm({ form, onPatch }) {
   const subQuestions = form.subQuestions || [];
+  const [history, setHistory] = useState([]);
+  const [future, setFuture] = useState([]);
+  const didLocalPatchRef = useRef(false);
+  const nextSubQuestionIdRef = useRef(1);
+
+  const cloneSubQuestions = (items) =>
+    JSON.parse(JSON.stringify(items || []));
+
+  const areSubQuestionsEqual = (leftItems, rightItems) =>
+    JSON.stringify(leftItems || []) === JSON.stringify(rightItems || []);
+
+  const ensureSubQuestionIds = (items) =>
+    (items || []).map((item) =>
+      item.__uiId
+        ? item
+        : {
+            ...item,
+            __uiId: `subq-${nextSubQuestionIdRef.current++}`,
+          }
+    );
+
+  useEffect(() => {
+    const maxExistingId = (subQuestions || []).reduce((maxValue, item) => {
+      const match = /^subq-(\d+)$/.exec(item.__uiId || "");
+      return match ? Math.max(maxValue, Number(match[1])) : maxValue;
+    }, 0);
+
+    if (maxExistingId >= nextSubQuestionIdRef.current) {
+      nextSubQuestionIdRef.current = maxExistingId + 1;
+    }
+  }, [subQuestions]);
+
+  useEffect(() => {
+    if (!didLocalPatchRef.current) {
+      setHistory([]);
+      setFuture([]);
+    }
+    didLocalPatchRef.current = false;
+  }, [subQuestions]);
+
+  useEffect(() => {
+    const normalized = ensureSubQuestionIds(subQuestions);
+    if (areSubQuestionsEqual(subQuestions, normalized)) return;
+    didLocalPatchRef.current = true;
+    onPatch({ subQuestions: normalized });
+  }, [onPatch, subQuestions]);
+
+  const patchSubQuestions = (nextSubQuestions) => {
+    const normalizedNextSubQuestions = ensureSubQuestionIds(nextSubQuestions);
+    if (areSubQuestionsEqual(subQuestions, normalizedNextSubQuestions)) return;
+    setHistory((previous) => [
+      ...previous.slice(-59),
+      cloneSubQuestions(subQuestions),
+    ]);
+    setFuture([]);
+    didLocalPatchRef.current = true;
+    onPatch({ subQuestions: normalizedNextSubQuestions });
+  };
+
+  const undo = () => {
+    setHistory((previous) => {
+      if (previous.length === 0) return previous;
+      const nextHistory = [...previous];
+      const snapshot = nextHistory.pop();
+      if (snapshot) {
+        setFuture((upcoming) => [
+          ...upcoming.slice(-59),
+          cloneSubQuestions(subQuestions),
+        ]);
+        didLocalPatchRef.current = true;
+        onPatch({ subQuestions: snapshot });
+      }
+      return nextHistory;
+    });
+  };
+
+  const redo = () => {
+    setFuture((previous) => {
+      if (previous.length === 0) return previous;
+      const nextFuture = [...previous];
+      const snapshot = nextFuture.pop();
+      if (snapshot) {
+        setHistory((past) => [
+          ...past.slice(-59),
+          cloneSubQuestions(subQuestions),
+        ]);
+        didLocalPatchRef.current = true;
+        onPatch({ subQuestions: snapshot });
+      }
+      return nextFuture;
+    });
+  };
 
   const updateSubQuestion = (index, value) => {
-    onPatch({
-      subQuestions: subQuestions.map((item, itemIndex) => (itemIndex === index ? value : item)),
-    });
+    patchSubQuestions(
+      subQuestions.map((item, itemIndex) => (itemIndex === index ? value : item))
+    );
   };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 6, marginBottom: -6 }}>
+        <UndoIconButton onClick={undo} disabled={history.length === 0} />
+        <RedoIconButton onClick={redo} disabled={future.length === 0} />
+      </div>
+
       <div
         style={{
           padding: "14px 16px",
@@ -636,20 +1259,16 @@ export function ComprehensiveForm({ form, onPatch }) {
 
       {subQuestions.map((item, index) => (
         <SubQuestionEditor
-          key={index}
+          key={item.__uiId || index}
           item={item}
           index={index}
           onChange={(value) => updateSubQuestion(index, value)}
-          onRemove={() =>
-            onPatch({
-              subQuestions: subQuestions.filter((_, itemIndex) => itemIndex !== index),
-            })
-          }
+          onRemove={() => patchSubQuestions(subQuestions.filter((_, itemIndex) => itemIndex !== index))}
         />
       ))}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-        <Btn ghost onClick={() => onPatch({ subQuestions: [...subQuestions, createSubQuestion()] })}>
+        <Btn ghost onClick={() => patchSubQuestions([...subQuestions, createSubQuestion()])}>
           + Add Sub-question
         </Btn>
         <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>

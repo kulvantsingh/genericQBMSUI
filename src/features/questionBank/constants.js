@@ -71,7 +71,7 @@ export const inputStyle = {
   borderRadius: 10,
   padding: "8px 12px",
   color: "var(--text-primary)",
-  fontSize: 14,
+  fontSize: 15,
   outline: "none",
   fontFamily: "inherit",
 };
@@ -89,7 +89,7 @@ export const pillStyle = {
   color: "var(--text-secondary)",
   padding: "3px 10px",
   borderRadius: 20,
-  fontSize: 12,
+  fontSize: 13,
 };
 
 export const THEME_VARS = {
@@ -139,6 +139,7 @@ export const THEME_VARS = {
     "--card-pair-left": "#ff6b9d",
     "--card-pair-right": "#7c6aff",
     "--card-sequence-accent": "#ffd166",
+    "--match-line-color": "#884a7f",
     "--type-icon-filter": "brightness(0) invert(1)",
   },
   light: {
@@ -187,6 +188,7 @@ export const THEME_VARS = {
     "--card-pair-left": "#9a3e76",
     "--card-pair-right": "#9a3e76",
     "--card-sequence-accent": "#b16c96",
+    "--match-line-color": "#B92458",
     "--type-icon-filter": "none",
   },
 };

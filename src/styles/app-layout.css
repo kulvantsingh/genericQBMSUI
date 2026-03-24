@@ -31,12 +31,12 @@
 
 .app-top-nav-title {
   font-weight: 800;
-  font-size: 18px;
+  font-size: 19px;
 }
 
 .app-top-nav-subtitle {
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: 13px;
   font-family: "Segoe UI", sans-serif;
 }
 
@@ -69,13 +69,13 @@
 
 .app-sidebar-brand-title {
   font-weight: 800;
-  font-size: 20px;
+  font-size: 21px;
   line-height: 1;
 }
 
 .app-sidebar-brand-subtitle {
   color: var(--sidebar-accent);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -110,7 +110,7 @@
   gap: 10px;
   cursor: pointer;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .sidebar-row-muted {
@@ -147,7 +147,7 @@
   color: var(--text-secondary);
   padding: 8px 10px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
 }
 
