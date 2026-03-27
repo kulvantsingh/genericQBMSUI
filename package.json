@@ -11,7 +11,13 @@
   },
   "dependencies": {
     "@ckeditor/ckeditor5-react": "^11.0.1",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "ckeditor5": "^47.6.1",
+    "html2canvas": "^1.4.1",
+    "katex": "^0.16.43",
+    "mathlive": "^0.109.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },
