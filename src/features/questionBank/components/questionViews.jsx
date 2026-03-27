@@ -1,5 +1,9 @@
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import "katex/dist/katex.min.css";
+import renderMathInElement from "katex/dist/contrib/auto-render";
 import "../../../styles/question-cards.css";
+import sequenceArrowIcon from "../../../assets/ui/down-arrow.png";
+import sequenceArrowDarkIcon from "../../../assets/ui/down-arrow-dark.png";
 
 import { pillStyle, TYPE_COLOR, TYPE_ICON, TYPE_LABEL, TYPES } from "../constants";
 import { Btn } from "./common";
@@ -236,13 +240,27 @@ function MatchPairBoard({ question }) {
 }
 
 function HtmlContent({ html, className, style }) {
-  return (
-    <div
-      className={className}
-      style={style}
-      dangerouslySetInnerHTML={{ __html: html || "" }}
-    />
-  );
+  const containerRef = useRef(null);
+
+  useLayoutEffect(() => {
+    if (containerRef.current) {
+      // Manually set HTML so React doesn't fight KaTeX's DOM mutations during rendering
+      containerRef.current.innerHTML = html || "";
+      
+      renderMathInElement(containerRef.current, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "\\(", right: "\\)", display: false },
+          { left: "\\[", right: "\\]", display: true }
+        ],
+        throwOnError: false,
+        errorColor: "#ef4444"
+      });
+    }
+  }, [html]);
+
+  const finalClass = ["ck-html-content", className].filter(Boolean).join(" ");
+  return <div ref={containerRef} className={finalClass} style={style} />;
 }
 
 function renderOptionGrid(options, isCorrect, correctClass = "") {
@@ -265,7 +283,7 @@ function renderOptionGrid(options, isCorrect, correctClass = "") {
   );
 }
 
-function renderQuestionBody(question) {
+function renderQuestionBody(question, isDark = false) {
   if (question.type === TYPES.MCQ) {
     return renderOptionGrid(question.options, (index) => index === question.correctAnswer);
   }
@@ -299,13 +317,21 @@ function renderQuestionBody(question) {
     const sequence = Array.isArray(question.correctAnswer)
       ? question.correctAnswer
       : question.options || [];
+    const sequenceConnectorIcon = isDark ? sequenceArrowDarkIcon : sequenceArrowIcon;
 
     return (
       <div className="qb-sequence-list">
         {sequence.map((item, index) => (
-          <div key={index} className="qb-sequence-item">
-            <span className="qb-sequence-index">{index + 1}</span>
-            <HtmlContent html={item || ""} className="qb-sequence-text" />
+          <div key={index} className="qb-sequence-step">
+            <div className="qb-sequence-item">
+              <span className="qb-sequence-index">{index + 1}</span>
+              <HtmlContent html={item || ""} className="qb-sequence-text" />
+            </div>
+            {index < sequence.length - 1 && (
+              <div className="qb-sequence-connector" aria-hidden="true">
+                <img src={sequenceConnectorIcon} alt="" className="qb-sequence-connector-icon" />
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -332,7 +358,7 @@ function renderQuestionBody(question) {
               <span>{index + 1}.</span>
               <HtmlContent html={item.question} style={{ flex: 1 }} />
             </div>
-            {renderQuestionBody(item)}
+            {renderQuestionBody(item, isDark)}
           </div>
         ))}
       </div>
@@ -342,7 +368,7 @@ function renderQuestionBody(question) {
   return null;
 }
 
-export function Card({ question, onEdit, onDelete, onPreview }) {
+export function Card({ question, onEdit, onDelete, onPreview, isDark = false }) {
   const color = TYPE_COLOR[question.type];
 
   return (
@@ -386,7 +412,7 @@ export function Card({ question, onEdit, onDelete, onPreview }) {
         </div>
       )}
 
-      {renderQuestionBody(question)}
+      {renderQuestionBody(question, isDark)}
 
       <div className="qb-card-footer">
         #{question.id} {question.createdAt ? `- ${new Date(question.createdAt).toLocaleDateString()}` : ""}
@@ -395,7 +421,7 @@ export function Card({ question, onEdit, onDelete, onPreview }) {
   );
 }
 
-export function Preview({ question, onClose }) {
+export function Preview({ question, onClose, isDark = false }) {
   const color = TYPE_COLOR[question.type];
 
   return (
@@ -482,7 +508,7 @@ export function Preview({ question, onClose }) {
           </div>
         )}
 
-        {renderQuestionBody(question)}
+        {renderQuestionBody(question, isDark)}
 
         {question.explanation && (
           <div

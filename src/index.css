@@ -114,6 +114,17 @@ select option {
   box-shadow: inset 0 0 0 1px var(--focus-ring, #7c6aff);
 }
 
+/* Align inline images vertically with surrounding text */
+.ck-content img,
+.ck.ck-editor__editable img,
+.image-inline img,
+img.image_resized,
+span.image-inline,
+.ck-content span.image-inline,
+.ck-html-content img {
+  vertical-align: middle !important;
+}
+
 .ck.ck-button,
 .ck.ck-button .ck-button__label {
   color: var(--text-primary) !important;

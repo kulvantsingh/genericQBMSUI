@@ -102,6 +102,17 @@
   margin-bottom: 0;
 }
 
+/* Align inline images perfectly inside any rich text on the dashboards */
+.qb-question-text img,
+.qb-instruction-text img,
+.qb-option-value img,
+.qb-match-cell img,
+.qb-sequence-text img,
+.qb-comprehensive-passage-text img,
+.qb-comprehensive-item-question img {
+  vertical-align: middle !important;
+}
+
 .qb-instruction-box {
   margin-bottom: 12px;
   padding: 12px 14px;
@@ -365,7 +376,13 @@
 .qb-sequence-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+}
+
+.qb-sequence-step {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .qb-sequence-item {
@@ -399,6 +416,19 @@
 
 .qb-sequence-text :where(p, ul, ol) {
   margin: 0;
+}
+
+.qb-sequence-connector {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0.88;
+}
+
+.qb-sequence-connector-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
 }
 
 .qb-comprehensive-root {

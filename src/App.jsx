@@ -37,6 +37,7 @@ import {
 } from "./features/questionBank/components";
 
 const THEME_STORAGE_KEY = "themeMode";
+const FONT_SCALE_STORAGE_KEY = "fontScale";
 
 function getInitialThemeMode() {
   try {
@@ -47,6 +48,19 @@ function getInitialThemeMode() {
   }
 
   return "light";
+}
+
+function getInitialFontScale() {
+  try {
+    const savedScale = Number(localStorage.getItem(FONT_SCALE_STORAGE_KEY));
+    if (Number.isFinite(savedScale)) {
+      return Math.min(1.3, Math.max(0.85, savedScale));
+    }
+  } catch {
+    // Ignore localStorage access issues and fall back to default.
+  }
+
+  return 1;
 }
 
 function NavIcon({ name }) {
@@ -150,7 +164,7 @@ export default function App() {
     exam: false,
   });
   const [themeMode, setThemeMode] = useState(getInitialThemeMode);
-  const [fontScale, setFontScale] = useState(1);
+  const [fontScale, setFontScale] = useState(getInitialFontScale);
   const [meta, setMeta] = useState(DEFAULT_META);
   const statAccents =
     themeMode === "light"
@@ -206,12 +220,11 @@ export default function App() {
   }, [state.view, state.activeType, state.editingId]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("fontScale");
-    if (saved) setFontScale(Number(saved));
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("fontScale", fontScale);
+    try {
+      localStorage.setItem(FONT_SCALE_STORAGE_KEY, String(fontScale));
+    } catch {
+      // Ignore localStorage access issues.
+    }
   }, [fontScale]);
 
   useEffect(() => {
@@ -309,6 +322,7 @@ export default function App() {
       return (
         <ComprehensiveForm
           form={state.form}
+          isDark={themeMode === "dark"}
           onPatch={(value) => dispatch({ type: "FORM", value })}
         />
       );
@@ -338,6 +352,7 @@ export default function App() {
         <AnswerConfiguration
           type={state.activeType}
           form={state.form}
+          isDark={themeMode === "dark"}
           onPatch={(value) => dispatch({ type: "FORM", value })}
         />
       </div>
@@ -691,6 +706,7 @@ export default function App() {
                     <Card
                       key={question.id}
                       question={question}
+                      isDark={themeMode === "dark"}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
                       onPreview={setPreview}
@@ -814,7 +830,7 @@ export default function App() {
                     ))}
                   </Field>
                   <Field
-                    label="Points"
+                    label={state.activeType === TYPES.COMPREHENSIVE ? "Total Points" : "Points"}
                     type="number"
                     value={
                       state.activeType === TYPES.COMPREHENSIVE
@@ -890,7 +906,13 @@ export default function App() {
           </div>
         </div>
 
-        {preview && <Preview question={preview} onClose={() => setPreview(null)} />}
+        {preview && (
+          <Preview
+            question={preview}
+            isDark={themeMode === "dark"}
+            onClose={() => setPreview(null)}
+          />
+        )}
         {state.toast && (
           <Toast
             msg={state.toast.msg}

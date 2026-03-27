@@ -13,8 +13,14 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import undoIcon from "../../../assets/ui/return.png";
+import undoIcon from "../../../assets/ui/undo.png";
 import redoIcon from "../../../assets/ui/redo.png";
+import undoDarkIcon from "../../../assets/ui/undo-dark.png";
+import redoDarkIcon from "../../../assets/ui/redo-dark.png";
+import sequenceArrowIcon from "../../../assets/ui/down-arrow.png";
+import sequenceArrowDarkIcon from "../../../assets/ui/down-arrow-dark.png";
+import crossIcon from "../../../assets/ui/cross.png";
+import twoSidedArrowIcon from "../../../assets/ui/transfer.png";
 
 import {
   CHILD_TYPES,
@@ -26,7 +32,8 @@ import {
 import { createSubQuestion, sumSubQuestionPoints } from "../questionUtils";
 import { Btn, Field } from "./common";
 
-function UndoIconButton({ onClick, disabled }) {
+function UndoIconButton({ onClick, disabled, isDark = false }) {
+  const iconSrc = isDark ? undoDarkIcon : undoIcon;
   return (
     <button
       type="button"
@@ -35,8 +42,8 @@ function UndoIconButton({ onClick, disabled }) {
       title="Undo"
       aria-label="Undo"
       style={{
-        width: 30,
-        height: 30,
+        width: 35,
+        height: 10,
         borderRadius: "50%",
         border: "none",
         background: "transparent",
@@ -49,12 +56,12 @@ function UndoIconButton({ onClick, disabled }) {
       }}
     >
       <img
-        src={undoIcon}
+        src={iconSrc}
         alt=""
         aria-hidden="true"
         style={{
-          width: 24,
-          height: 24,
+          width: 19,
+          height: 19,
           objectFit: "contain",
           // filter: "var(--type-icon-filter, none)",
         }}
@@ -63,7 +70,8 @@ function UndoIconButton({ onClick, disabled }) {
   );
 }
 
-function RedoIconButton({ onClick, disabled }) {
+function RedoIconButton({ onClick, disabled, isDark = false }) {
+  const iconSrc = isDark ? redoDarkIcon : redoIcon;
   return (
     <button
       type="button"
@@ -72,8 +80,8 @@ function RedoIconButton({ onClick, disabled }) {
       title="Redo"
       aria-label="Redo"
       style={{
-        width: 30,
-        height: 30,
+        width: 10,
+        height: 10,
         borderRadius: "50%",
         border: "none",
         background: "transparent",
@@ -86,12 +94,12 @@ function RedoIconButton({ onClick, disabled }) {
       }}
     >
       <img
-        src={redoIcon}
+        src={iconSrc}
         alt=""
         aria-hidden="true"
         style={{
-          width: 24,
-          height: 24,
+          width: 19,
+          height: 19,
           objectFit: "contain",
           // filter: "var(--type-icon-filter, none)",
         }}
@@ -99,6 +107,14 @@ function RedoIconButton({ onClick, disabled }) {
     </button>
   );
 }
+
+const answerConfigHistoryActionsStyle = {
+  position: "absolute",
+  right: 0,
+  top: -34,
+  display: "flex",
+  gap: 6,
+};
 
 const areStringArraysEqual = (left, right) =>
   left.length === right.length && left.every((item, index) => item === right[index]);
@@ -155,7 +171,7 @@ function mapSubQuestionSingleAndMulti(fromType, toType, item) {
   };
 }
 
-function MCQForm({ form, onPatch }) {
+function MCQForm({ form, onPatch, isDark = false }) {
   const [history, setHistory] = useState([]);
   const [future, setFuture] = useState([]);
   const didLocalPatchRef = useRef(false);
@@ -283,10 +299,10 @@ function MCQForm({ form, onPatch }) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: 6, marginBottom: -4 }}>
-        <UndoIconButton onClick={undo} disabled={history.length === 0} />
-        <RedoIconButton onClick={redo} disabled={future.length === 0} />
+    <div style={{ display: "flex", flexDirection: "column", gap: 14, position: "relative" }}>
+      <div style={answerConfigHistoryActionsStyle}>
+        <UndoIconButton onClick={undo} disabled={history.length === 0} isDark={isDark} />
+        <RedoIconButton onClick={redo} disabled={future.length === 0} isDark={isDark} />
       </div>
       {form.options.map((option, index) => (
         <div key={optionIds[index] || `mcq-fallback-${index}`} style={{ display: "flex", gap: 10, alignItems: "center" }}>
@@ -312,7 +328,12 @@ function MCQForm({ form, onPatch }) {
           </div>
           {form.options.length > 2 && (
             <button type="button" onClick={() => removeOption(index)} style={removeButtonStyle}>
-              &#x274C;
+              <img
+                src={crossIcon}
+                alt="Remove option"
+                aria-hidden="true"
+                style={{ width: 16, height: 16, objectFit: "contain" }}
+              />
             </button>
           )}
         </div>
@@ -376,7 +397,7 @@ function TrueFalseForm({ form, onPatch }) {
   );
 }
 
-function MultiCorrectForm({ form, onPatch }) {
+function MultiCorrectForm({ form, onPatch, isDark = false }) {
   const [history, setHistory] = useState([]);
   const [future, setFuture] = useState([]);
   const didLocalPatchRef = useRef(false);
@@ -505,10 +526,10 @@ function MultiCorrectForm({ form, onPatch }) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: 6, marginBottom: -4 }}>
-        <UndoIconButton onClick={undo} disabled={history.length === 0} />
-        <RedoIconButton onClick={redo} disabled={future.length === 0} />
+    <div style={{ display: "flex", flexDirection: "column", gap: 14, position: "relative" }}>
+      <div style={answerConfigHistoryActionsStyle}>
+        <UndoIconButton onClick={undo} disabled={history.length === 0} isDark={isDark} />
+        <RedoIconButton onClick={redo} disabled={future.length === 0} isDark={isDark} />
       </div>
       {form.options.map((option, index) => (
         <div key={optionIds[index] || `multi-fallback-${index}`} style={{ display: "flex", gap: 10, alignItems: "center" }}>
@@ -544,7 +565,12 @@ function MultiCorrectForm({ form, onPatch }) {
           </div>
           {form.options.length > 2 && (
             <button type="button" onClick={() => removeOption(index)} style={removeButtonStyle}>
-              &#x274C;
+              <img
+                src={crossIcon}
+                alt="Remove option"
+                aria-hidden="true"
+                style={{ width: 16, height: 16, objectFit: "contain" }}
+              />
             </button>
           )}
         </div>
@@ -644,14 +670,19 @@ function SequenceSortableRow({
       </div>
       {optionsLength > 2 && (
         <button type="button" onClick={() => removeItem(index)} style={removeButtonStyle}>
-          &#x274C;
+          <img
+            src={crossIcon}
+            alt="Remove item"
+            aria-hidden="true"
+            style={{ width: 16, height: 16, objectFit: "contain" }}
+          />
         </button>
       )}
     </div>
   );
 }
 
-function ArrangeSequenceForm({ form, onPatch }) {
+function ArrangeSequenceForm({ form, onPatch, isDark = false }) {
   const [history, setHistory] = useState([]);
   const [future, setFuture] = useState([]);
   const didLocalPatchRef = useRef(false);
@@ -768,6 +799,7 @@ function ArrangeSequenceForm({ form, onPatch }) {
   };
 
   const sortableIds = itemIds;
+  const sequenceConnectorIcon = isDark ? sequenceArrowDarkIcon : sequenceArrowIcon;
 
   const handleDragStart = (event) => {
     setActiveId(event.active.id);
@@ -799,10 +831,10 @@ function ArrangeSequenceForm({ form, onPatch }) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: 6, marginBottom: -4 }}>
-        <UndoIconButton onClick={undo} disabled={history.length === 0} />
-        <RedoIconButton onClick={redo} disabled={future.length === 0} />
+    <div style={{ display: "flex", flexDirection: "column", gap: 14, position: "relative" }}>
+      <div style={answerConfigHistoryActionsStyle}>
+        <UndoIconButton onClick={undo} disabled={history.length === 0} isDark={isDark} />
+        <RedoIconButton onClick={redo} disabled={future.length === 0} isDark={isDark} />
       </div>
       <p style={{ color: "var(--text-secondary)", fontSize: 13, margin: 0 }}>
         Enter the sequence items in the correct order. Students will arrange them in this order.
@@ -839,13 +871,20 @@ function ArrangeSequenceForm({ form, onPatch }) {
                   style={{
                     display: "flex",
                     justifyContent: "center",
-                    color: "var(--sequence-accent)",
-                    fontSize: 16,
                     opacity: 0.8,
                     marginTop: 2,
                   }}
                 >
-                  &#x2193;
+                  <img
+                    src={sequenceConnectorIcon}
+                    alt=""
+                    aria-hidden="true"
+                    style={{
+                      width: 16,
+                      height: 16,
+                      objectFit: "contain",
+                    }}
+                  />
                 </div>
               )}
             </div>
@@ -861,7 +900,7 @@ function ArrangeSequenceForm({ form, onPatch }) {
   );
 }
 
-function MatchPairForm({ form, onPatch }) {
+function MatchPairForm({ form, onPatch, isDark = false }) {
   const [history, setHistory] = useState([]);
   const [future, setFuture] = useState([]);
   const didLocalPatchRef = useRef(false);
@@ -975,10 +1014,10 @@ function MatchPairForm({ form, onPatch }) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: 6, marginBottom: -4 }}>
-        <UndoIconButton onClick={undoPairEdit} disabled={history.length === 0} />
-        <RedoIconButton onClick={redoPairEdit} disabled={future.length === 0} />
+    <div style={{ display: "flex", flexDirection: "column", gap: 12, position: "relative" }}>
+      <div style={answerConfigHistoryActionsStyle}>
+        <UndoIconButton onClick={undoPairEdit} disabled={history.length === 0} isDark={isDark} />
+        <RedoIconButton onClick={redoPairEdit} disabled={future.length === 0} isDark={isDark} />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr auto", gap: 10 }}>
@@ -1008,7 +1047,14 @@ function MatchPairForm({ form, onPatch }) {
               placeholder={`Term ${index + 1}`}
             />
           </div>
-          <span style={{ color: "var(--text-muted)", fontSize: 18 }}>&#x21FF;</span>
+          <span style={{ color: "var(--text-muted)", fontSize: 18 }}>
+            <img
+                src={twoSidedArrowIcon}
+                alt="Remove pair"
+                aria-hidden="true"
+                style={{ width: 16, height: 16, objectFit: "contain" }}
+              />
+            </span>
           <div style={{ minWidth: 0 }}>
             <Field
               value={pair.right}
@@ -1022,7 +1068,12 @@ function MatchPairForm({ form, onPatch }) {
               onClick={() => removePair(index)}
               style={removeButtonStyle}
             >
-              &#x274C;
+              <img
+                src={crossIcon}
+                alt="Remove pair"
+                aria-hidden="true"
+                style={{ width: 16, height: 16, objectFit: "contain" }}
+              />
             </button>
           ) : (
             <span />
@@ -1038,18 +1089,18 @@ function MatchPairForm({ form, onPatch }) {
   );
 }
 
-export function AnswerConfiguration({ type, form, onPatch }) {
-  if (type === TYPES.MCQ) return <MCQForm form={form} onPatch={onPatch} />;
-  if (type === TYPES.TRUE_FALSE) return <TrueFalseForm form={form} onPatch={onPatch} />;
-  if (type === TYPES.MULTI_CORRECT) return <MultiCorrectForm form={form} onPatch={onPatch} />;
+export function AnswerConfiguration({ type, form, onPatch, isDark = false }) {
+  if (type === TYPES.MCQ) return <MCQForm form={form} onPatch={onPatch} isDark={isDark} />;
+  if (type === TYPES.TRUE_FALSE) return <TrueFalseForm form={form} onPatch={onPatch} isDark={isDark} />;
+  if (type === TYPES.MULTI_CORRECT) return <MultiCorrectForm form={form} onPatch={onPatch} isDark={isDark} />;
   if (type === TYPES.ARRANGE_SEQUENCE) {
-    return <ArrangeSequenceForm form={form} onPatch={onPatch} />;
+    return <ArrangeSequenceForm form={form} onPatch={onPatch} isDark={isDark} />;
   }
-  if (type === TYPES.MATCH_PAIR) return <MatchPairForm form={form} onPatch={onPatch} />;
+  if (type === TYPES.MATCH_PAIR) return <MatchPairForm form={form} onPatch={onPatch} isDark={isDark} />;
   return null;
 }
 
-function SubQuestionEditor({ item, index, onChange, onRemove }) {
+function SubQuestionEditor({ item, index, onChange, onRemove, isDark = false }) {
   const toSingleMultiSnapshot = (source) => {
     const options =
       Array.isArray(source.options) && source.options.length > 0
@@ -1218,6 +1269,7 @@ function SubQuestionEditor({ item, index, onChange, onRemove }) {
         <AnswerConfiguration
           type={item.type}
           form={item}
+          isDark={isDark}
           onPatch={(patch) => onChange((currentItem) => ({ ...currentItem, ...patch }))}
         />
       </div>
@@ -1252,7 +1304,7 @@ function SubQuestionEditor({ item, index, onChange, onRemove }) {
   );
 }
 
-export function ComprehensiveForm({ form, onPatch }) {
+export function ComprehensiveForm({ form, onPatch, isDark = false }) {
   const subQuestions = form.subQuestions || [];
   const [history, setHistory] = useState([]);
   const [future, setFuture] = useState([]);
@@ -1381,11 +1433,6 @@ export function ComprehensiveForm({ form, onPatch }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: 6, marginBottom: -6 }}>
-        <UndoIconButton onClick={undo} disabled={history.length === 0} />
-        <RedoIconButton onClick={redo} disabled={future.length === 0} />
-      </div>
-
       <div
         style={{
           padding: "14px 16px",
@@ -1406,6 +1453,7 @@ export function ComprehensiveForm({ form, onPatch }) {
           key={item.__uiId || index}
           item={item}
           index={index}
+          isDark={isDark}
           onChange={(value) => updateSubQuestion(item.__uiId, index, value)}
           onRemove={() => removeSubQuestion(item.__uiId, index)}
         />
@@ -1418,9 +1466,9 @@ export function ComprehensiveForm({ form, onPatch }) {
         >
           + Add Sub-question
         </Btn>
-        <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>
+        {/* <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>
           Total points: {sumSubQuestionPoints(subQuestions)}
-        </div>
+        </div> */}
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import { useContext, useEffect, useId, useRef, useState } from "react";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import { ClassicEditor } from "ckeditor5";
 import "ckeditor5/ckeditor5.css";
+import crossIcon from "../../../assets/ui/cross.png";
 
 import { EditorContext } from "../editorContext";
 import { getEditorConfig } from "../editorConfig";
@@ -78,7 +79,12 @@ export function Toast({ msg, kind, onClose }) {
           fontSize: 16,
         }}
       >
-        &#x274C;
+        <img
+          src={crossIcon}
+          alt="Close"
+          aria-hidden="true"
+          style={{ width: 16, height: 16, objectFit: "contain" }}
+        />
       </button>
     </div>
   );
@@ -497,7 +503,7 @@ export function Field({
                 background: "var(--input-bg)",
                 opacity: disabled ? 0.65 : 1,
                 minHeight: 42,
-                padding: "8px 12px",
+                padding: "4px 12px",
                 color: "var(--text-primary)",
                 textAlign: "left",
                 cursor: disabled ? "not-allowed" : "pointer",
@@ -505,7 +511,7 @@ export function Field({
             >
               {stripHtml(value || "") ? (
                 <div
-                  style={{ color: "var(--text-primary)", lineHeight: 0 }}
+                  style={{ color: "var(--text-primary)" }}
                   dangerouslySetInnerHTML={{ __html: value || "" }}
                 />
               ) : (
