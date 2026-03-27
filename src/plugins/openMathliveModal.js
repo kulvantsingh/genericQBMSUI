@@ -477,6 +477,7 @@ export function openMathliveModal(editor, existingData) {
         insertBtn.disabled = false;
       }
     } else {
+      // Added Functionality to insert LaTeX as text as well as to insert image
       if (insertMode === 'latex') {
         // ── LATEX TEXT INSERT MODE ─────────────────────────────────────────
         insertLatexIntoEditor(editor, latex);
