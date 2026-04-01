@@ -93,6 +93,15 @@ select option {
   min-height: 100px !important;
 }
 
+.inline-rich-preview-content,
+.inline-rich-preview-placeholder {
+  line-height: 1.4;
+}
+
+.inline-rich-preview-content :where(p, ul, ol) {
+  margin: 0;
+}
+
 .ck.ck-editor__editable p,
 .ck.ck-editor__editable li,
 .ck.ck-editor__editable a,

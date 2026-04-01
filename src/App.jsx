@@ -294,6 +294,12 @@ export default function App() {
       difficulty: question.difficulty,
       subject: question.subject,
       tags: question.tags || "",
+      bookName: question.bookName || "",
+      bookEdition: question.bookEdition || "",
+      isbn: question.isbn || "",
+      etgNumber: question.etgNumber || "",
+      pageNumber: question.pageNumber || "",
+      questionNumber: question.questionNumber || "",
     });
 
     dispatch({
@@ -317,12 +323,15 @@ export default function App() {
     setSidebarSections((current) => ({ ...current, [section]: !current[section] }));
   }, []);
 
+  const createSizeOffset = 3;
+
   const renderMainForm = () => {
     if (state.activeType === TYPES.COMPREHENSIVE) {
       return (
         <ComprehensiveForm
           form={state.form}
           isDark={themeMode === "dark"}
+          sizeOffset={createSizeOffset}
           onPatch={(value) => dispatch({ type: "FORM", value })}
         />
       );
@@ -353,11 +362,93 @@ export default function App() {
           type={state.activeType}
           form={state.form}
           isDark={themeMode === "dark"}
+          sizeOffset={createSizeOffset}
           onPatch={(value) => dispatch({ type: "FORM", value })}
         />
       </div>
     );
   };
+
+  const renderMetadataForm = () => (
+    <div
+      style={{
+        background: "var(--surface-bg)",
+        borderRadius: 16,
+        padding: "20px 24px",
+        border: "1px solid var(--border-color)",
+      }}
+    >
+      <div
+        style={{
+          color: "var(--text-secondary)",
+          fontSize: 13,
+          fontWeight: 700,
+          marginBottom: 16,
+          textTransform: "uppercase",
+          letterSpacing: 1,
+        }}
+      >
+        Reference Metadata
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+        <Field
+          label="Book Name"
+          value={meta.bookName}
+          onChange={(event) =>
+            setMeta((current) => ({ ...current, bookName: event.target.value }))
+          }
+          placeholder="Book name"
+          sizeOffset={createSizeOffset}
+        />
+        <Field
+          label="Book Edition"
+          value={meta.bookEdition}
+          onChange={(event) =>
+            setMeta((current) => ({ ...current, bookEdition: event.target.value }))
+          }
+          placeholder="Enter book edition"
+          sizeOffset={createSizeOffset}
+        />
+        <Field
+          label="ISBN"
+          value={meta.isbn}
+          onChange={(event) =>
+            setMeta((current) => ({ ...current, isbn: event.target.value }))
+          }
+          placeholder="ISBN"
+          sizeOffset={createSizeOffset}
+        />
+        <Field
+          label="Etg Number"
+          value={meta.etgNumber}
+          onChange={(event) =>
+            setMeta((current) => ({ ...current, etgNumber: event.target.value }))
+          }
+          placeholder="Etg number"
+          sizeOffset={createSizeOffset}
+        />
+        <Field
+          label="Page Number"
+          value={meta.pageNumber}
+          onChange={(event) =>
+            setMeta((current) => ({ ...current, pageNumber: event.target.value }))
+          }
+          placeholder="Enter page number"
+          sizeOffset={createSizeOffset}
+        />
+        <Field
+          label="Question Number"
+          value={meta.questionNumber}
+          onChange={(event) =>
+            setMeta((current) => ({ ...current, questionNumber: event.target.value }))
+          }
+          placeholder="Question number"
+          sizeOffset={createSizeOffset}
+        />
+      </div>
+    </div>
+  );
 
   return (
     <EditorContext.Provider value={{ activeFieldId, setActiveFieldId }}>
@@ -623,7 +714,7 @@ export default function App() {
                   onClick={() => handleTypeCardFilter(TYPES.ARRANGE_SEQUENCE)}
                 />
                 <StatCard
-                  label="Comprehensive"
+                  label="Comprehension"
                   value={state.stats.byType?.comprehensive || 0}
                   accent={statAccents.comprehensive}
                   active={state.filters.type === TYPES.COMPREHENSIVE}
@@ -719,7 +810,7 @@ export default function App() {
 
           {state.view === "create" && (
             <div style={{ width: "90%", maxWidth: "none", margin: "0 auto" }}>
-              <h2 style={{ margin: "0 0 24px", fontWeight: 800, fontSize: 26 }}>
+              <h2 style={{ margin: "0 0 24px", fontWeight: 800, fontSize: 29 }}>
                 {state.editingId ? "Edit Question" : "Create Question"}
               </h2>
 
@@ -750,7 +841,7 @@ export default function App() {
                         background: active ? `${color}22` : "var(--surface-bg)",
                         color: active ? color : "var(--text-secondary)",
                         fontWeight: 700,
-                        fontSize: 13,
+                        fontSize: 16,
                       }}
                     >
                       <div style={{ marginBottom: 6, display: "flex", justifyContent: "center" }}>
@@ -772,6 +863,18 @@ export default function App() {
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                
+                <Field
+                  label="Instruction (optional)"
+                  as="textarea"
+                  rows={2}
+                  value={state.form.instruction || ""}
+                  onChange={(event) =>
+                    dispatch({ type: "FORM", value: { instruction: event.target.value } })
+                  }
+                  placeholder="Add optional instructions for students..."
+                  sizeOffset={createSizeOffset}
+                />
                 <Field
                   label={
                     state.activeType === TYPES.COMPREHENSIVE
@@ -787,22 +890,16 @@ export default function App() {
                   placeholder={
                     state.activeType === TYPES.COMPREHENSIVE
                       ? "Enter the common statement or passage here..."
-                    : "Enter your question here..."
+                      : "Enter your question here..."
                   }
+                  sizeOffset={createSizeOffset}
                 />
 
-                <Field
-                  label="Instruction (optional)"
-                  as="textarea"
-                  rows={2}
-                  value={state.form.instruction || ""}
-                  onChange={(event) =>
-                    dispatch({ type: "FORM", value: { instruction: event.target.value } })
-                  }
-                  placeholder="Add optional instructions for students..."
-                />
+                
 
                 {renderMainForm()}
+
+                {renderMetadataForm()}
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
                   <Field
@@ -812,6 +909,7 @@ export default function App() {
                     onChange={(event) =>
                       setMeta((current) => ({ ...current, difficulty: event.target.value }))
                     }
+                    sizeOffset={createSizeOffset}
                   >
                     {DIFFS.map((item) => (
                       <option key={item}>{item}</option>
@@ -824,6 +922,7 @@ export default function App() {
                     onChange={(event) =>
                       setMeta((current) => ({ ...current, subject: event.target.value }))
                     }
+                    sizeOffset={createSizeOffset}
                   >
                     {SUBJECTS.map((item) => (
                       <option key={item}>{item}</option>
@@ -844,6 +943,7 @@ export default function App() {
                       })
                     }
                     disabled={state.activeType === TYPES.COMPREHENSIVE}
+                    sizeOffset={createSizeOffset}
                   />
                 </div>
 
@@ -860,6 +960,7 @@ export default function App() {
                       ? "Optional explanation for the full passage..."
                       : "Explain the correct answer..."
                   }
+                  sizeOffset={createSizeOffset}
                 />
 
                 {state.errors.length > 0 && (
@@ -874,7 +975,7 @@ export default function App() {
                     {state.errors.map((error, index) => (
                       <div
                         key={index}
-                        style={{ color: "var(--danger)", fontSize: 14, fontWeight: 600 }}
+                        style={{ color: "var(--danger)", fontSize: 17, fontWeight: 600 }}
                       >
                         {error}
                       </div>
@@ -885,6 +986,7 @@ export default function App() {
                 <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
                   <Btn
                     variant="secondary"
+                    sizeOffset={createSizeOffset}
                     onClick={() => {
                       dispatch({ type: "VIEW", value: "list" });
                       dispatch({ type: "EDIT_CLEAR" });
@@ -892,7 +994,7 @@ export default function App() {
                   >
                     Cancel
                   </Btn>
-                  <Btn onClick={handleSave} disabled={state.saving}>
+                  <Btn onClick={handleSave} disabled={state.saving} sizeOffset={createSizeOffset}>
                     {state.saving
                       ? "Saving..."
                       : state.editingId

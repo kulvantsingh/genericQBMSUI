@@ -5,7 +5,15 @@ import matchPairIcon from "../../assets/type-icons/match_pair.png";
 import arrangeSequenceIcon from "../../assets/type-icons/arrange_sequence.png";
 import comprehensiveIcon from "../../assets/type-icons/comprehensive.png";
 
-export const BASE_URL = "http://localhost:8082/api/v1/questions";
+const API_PATH = "/api/v1/questions";
+const configuredBaseUrl = (import.meta.env.VITE_API_BASE_URL || "").trim();
+const configuredApiPort = (import.meta.env.VITE_API_PORT || "8082").trim();
+const browserBaseUrl =
+  typeof window === "undefined"
+    ? ""
+    : `${window.location.protocol}//${window.location.hostname}:${configuredApiPort}${API_PATH}`;
+
+export const BASE_URL = (configuredBaseUrl || browserBaseUrl).replace(/\/+$/, "");
 
 export const TYPES = {
   MCQ: "mcq",
@@ -30,7 +38,7 @@ export const TYPE_LABEL = {
   true_false: "True / False",
   match_pair: "Match the Pair",
   arrange_sequence: "Arrange the Sequence",
-  comprehensive: "Comprehensive",
+  comprehensive: "Comprehension",
 };
 
 export const TYPE_ICON = {
@@ -197,4 +205,10 @@ export const DEFAULT_META = {
   difficulty: "Medium",
   subject: "General Knowledge",
   tags: "",
+  bookName: "",
+  bookEdition: "",
+  isbn: "",
+  etgNumber: "",
+  pageNumber: "",
+  questionNumber: "",
 };

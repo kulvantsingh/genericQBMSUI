@@ -116,6 +116,18 @@ const answerConfigHistoryActionsStyle = {
   gap: 6,
 };
 
+const addTextButtonStyle = (sizeOffset = 0) => ({
+  alignSelf: "flex-start",
+  padding: 0,
+  border: "none",
+  background: "transparent",
+  color: "var(--brand-primary)",
+  fontSize: 14 + sizeOffset,
+  fontWeight: 700,
+  cursor: "pointer",
+  lineHeight: 1.4,
+});
+
 const areStringArraysEqual = (left, right) =>
   left.length === right.length && left.every((item, index) => item === right[index]);
 
@@ -171,7 +183,7 @@ function mapSubQuestionSingleAndMulti(fromType, toType, item) {
   };
 }
 
-function MCQForm({ form, onPatch, isDark = false }) {
+function MCQForm({ form, onPatch, isDark = false, sizeOffset = 0 }) {
   const [history, setHistory] = useState([]);
   const [future, setFuture] = useState([]);
   const didLocalPatchRef = useRef(false);
@@ -324,6 +336,7 @@ function MCQForm({ form, onPatch, isDark = false }) {
               value={option}
               onChange={(event) => setOption(index, event.target.value)}
               placeholder={`Option ${String.fromCharCode(65 + index)}`}
+              sizeOffset={sizeOffset}
             />
           </div>
           {form.options.length > 2 && (
@@ -339,22 +352,22 @@ function MCQForm({ form, onPatch, isDark = false }) {
         </div>
       ))}
       {form.options.length < 8 && (
-        <Btn
-          small
-          ghost
+        <button
+          type="button"
           onClick={() => {
             const nextIds = [...optionIds, `mcq-opt-${nextOptionIdRef.current++}`];
             patchMcq({ options: [...form.options, ""] }, nextIds);
           }}
+          style={addTextButtonStyle(sizeOffset)}
         >
           + Add Option
-        </Btn>
+        </button>
       )}
     </div>
   );
 }
 
-function TrueFalseForm({ form, onPatch }) {
+function TrueFalseForm({ form, onPatch, sizeOffset = 0 }) {
   return (
     <div style={{ display: "flex", gap: 16 }}>
       {[true, false].map((value) => (
@@ -367,7 +380,7 @@ function TrueFalseForm({ form, onPatch }) {
             padding: 18,
             borderRadius: 14,
             fontWeight: 800,
-            fontSize: 18,
+            fontSize: 18 + sizeOffset,
             cursor: "pointer",
             border: `2px solid ${
               form.correctAnswer === value
@@ -397,7 +410,7 @@ function TrueFalseForm({ form, onPatch }) {
   );
 }
 
-function MultiCorrectForm({ form, onPatch, isDark = false }) {
+function MultiCorrectForm({ form, onPatch, isDark = false, sizeOffset = 0 }) {
   const [history, setHistory] = useState([]);
   const [future, setFuture] = useState([]);
   const didLocalPatchRef = useRef(false);
@@ -551,16 +564,17 @@ function MultiCorrectForm({ form, onPatch, isDark = false }) {
               justifyContent: "center",
               color: "var(--option-multi-text)",
               fontWeight: 900,
-              fontSize: 13,
+              fontSize: 13 + sizeOffset,
             }}
           >
-            {form.correctAnswers.includes(index) ? "&#21FF;" : ""}
+            {form.correctAnswers.includes(index) ? "✓" : ""}
           </button>
           <div style={{ flex: 1 }}>
             <Field
               value={option}
               onChange={(event) => setOption(index, event.target.value)}
               placeholder={`Option ${String.fromCharCode(65 + index)}`}
+              sizeOffset={sizeOffset}
             />
           </div>
           {form.options.length > 2 && (
@@ -576,16 +590,16 @@ function MultiCorrectForm({ form, onPatch, isDark = false }) {
         </div>
       ))}
       {form.options.length < 8 && (
-        <Btn
-          small
-          ghost
+        <button
+          type="button"
           onClick={() => {
             const nextIds = [...optionIds, `multi-opt-${nextOptionIdRef.current++}`];
             patchMultiCorrect({ options: [...form.options, ""] }, nextIds);
           }}
+          style={addTextButtonStyle(sizeOffset)}
         >
           + Add Option
-        </Btn>
+        </button>
       )}
     </div>
   );
@@ -599,6 +613,7 @@ function SequenceSortableRow({
   setItem,
   removeItem,
   showDropHighlight,
+  sizeOffset = 0,
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id });
@@ -635,7 +650,7 @@ function SequenceSortableRow({
           background: "transparent",
           color: "var(--text-muted)",
           cursor: "grab",
-          fontSize: 13,
+          fontSize: 13 + sizeOffset,
           lineHeight: 1,
           userSelect: "none",
           letterSpacing: 1,
@@ -666,6 +681,7 @@ function SequenceSortableRow({
           value={option}
           onChange={(event) => setItem(index, event.target.value)}
           placeholder={`Sequence item ${index + 1}`}
+          sizeOffset={sizeOffset}
         />
       </div>
       {optionsLength > 2 && (
@@ -682,7 +698,7 @@ function SequenceSortableRow({
   );
 }
 
-function ArrangeSequenceForm({ form, onPatch, isDark = false }) {
+function ArrangeSequenceForm({ form, onPatch, isDark = false, sizeOffset = 0 }) {
   const [history, setHistory] = useState([]);
   const [future, setFuture] = useState([]);
   const didLocalPatchRef = useRef(false);
@@ -836,10 +852,10 @@ function ArrangeSequenceForm({ form, onPatch, isDark = false }) {
         <UndoIconButton onClick={undo} disabled={history.length === 0} isDark={isDark} />
         <RedoIconButton onClick={redo} disabled={future.length === 0} isDark={isDark} />
       </div>
-      <p style={{ color: "var(--text-secondary)", fontSize: 13, margin: 0 }}>
+      <p style={{ color: "var(--text-secondary)", fontSize: 13 + sizeOffset, margin: 0 }}>
         Enter the sequence items in the correct order. Students will arrange them in this order.
       </p>
-      <div style={{ color: "var(--text-muted)", fontSize: 12, marginTop: -4 }}>
+      <div style={{ color: "var(--text-muted)", fontSize: 12 + sizeOffset, marginTop: -4 }}>
         Drag and drop to reorder items
       </div>
       <DndContext
@@ -860,6 +876,7 @@ function ArrangeSequenceForm({ form, onPatch, isDark = false }) {
                 optionsLength={form.options.length}
                 setItem={setItem}
                 removeItem={removeItem}
+                sizeOffset={sizeOffset}
                 showDropHighlight={
                   overId === itemIds[index] &&
                   activeId !== null &&
@@ -892,15 +909,19 @@ function ArrangeSequenceForm({ form, onPatch, isDark = false }) {
         </SortableContext>
       </DndContext>
       {form.options.length < 8 && (
-        <Btn small ghost onClick={addItem}>
+        <button
+          type="button"
+          onClick={addItem}
+          style={addTextButtonStyle(sizeOffset)}
+        >
           + Add Item
-        </Btn>
+        </button>
       )}
     </div>
   );
 }
 
-function MatchPairForm({ form, onPatch, isDark = false }) {
+function MatchPairForm({ form, onPatch, isDark = false, sizeOffset = 0 }) {
   const [history, setHistory] = useState([]);
   const [future, setFuture] = useState([]);
   const didLocalPatchRef = useRef(false);
@@ -1021,11 +1042,11 @@ function MatchPairForm({ form, onPatch, isDark = false }) {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr auto", gap: 10 }}>
-        <span style={{ color: "var(--brand-accent)", fontWeight: 700, fontSize: 13, textAlign: "center" }}>
+        <span style={{ color: "var(--brand-accent)", fontWeight: 700, fontSize: 13 + sizeOffset, textAlign: "center" }}>
           Column A
         </span>
         <span />
-        <span style={{ color: "var(--brand-secondary)", fontWeight: 700, fontSize: 13, textAlign: "center" }}>
+        <span style={{ color: "var(--brand-secondary)", fontWeight: 700, fontSize: 13 + sizeOffset, textAlign: "center" }}>
           Column B
         </span>
         <span />
@@ -1045,6 +1066,7 @@ function MatchPairForm({ form, onPatch, isDark = false }) {
               value={pair.left}
               onChange={(event) => setPair(index, "left", event.target.value)}
               placeholder={`Term ${index + 1}`}
+              sizeOffset={sizeOffset}
             />
           </div>
           <span style={{ color: "var(--text-muted)", fontSize: 18 }}>
@@ -1060,6 +1082,7 @@ function MatchPairForm({ form, onPatch, isDark = false }) {
               value={pair.right}
               onChange={(event) => setPair(index, "right", event.target.value)}
               placeholder={`Definition ${index + 1}`}
+              sizeOffset={sizeOffset}
             />
           </div>
           {form.pairs.length > 2 ? (
@@ -1081,26 +1104,49 @@ function MatchPairForm({ form, onPatch, isDark = false }) {
         </div>
       ))}
       {form.pairs.length < 10 && (
-        <Btn small ghost onClick={addPair}>
+        <button
+          type="button"
+          onClick={addPair}
+          style={addTextButtonStyle(sizeOffset)}
+        >
           + Add Pair
-        </Btn>
+        </button>
       )}
     </div>
   );
 }
 
-export function AnswerConfiguration({ type, form, onPatch, isDark = false }) {
-  if (type === TYPES.MCQ) return <MCQForm form={form} onPatch={onPatch} isDark={isDark} />;
-  if (type === TYPES.TRUE_FALSE) return <TrueFalseForm form={form} onPatch={onPatch} isDark={isDark} />;
-  if (type === TYPES.MULTI_CORRECT) return <MultiCorrectForm form={form} onPatch={onPatch} isDark={isDark} />;
-  if (type === TYPES.ARRANGE_SEQUENCE) {
-    return <ArrangeSequenceForm form={form} onPatch={onPatch} isDark={isDark} />;
+export function AnswerConfiguration({ type, form, onPatch, isDark = false, sizeOffset = 0 }) {
+  if (type === TYPES.MCQ) {
+    return <MCQForm form={form} onPatch={onPatch} isDark={isDark} sizeOffset={sizeOffset} />;
   }
-  if (type === TYPES.MATCH_PAIR) return <MatchPairForm form={form} onPatch={onPatch} isDark={isDark} />;
+  if (type === TYPES.TRUE_FALSE) {
+    return (
+      <TrueFalseForm form={form} onPatch={onPatch} isDark={isDark} sizeOffset={sizeOffset} />
+    );
+  }
+  if (type === TYPES.MULTI_CORRECT) {
+    return (
+      <MultiCorrectForm form={form} onPatch={onPatch} isDark={isDark} sizeOffset={sizeOffset} />
+    );
+  }
+  if (type === TYPES.ARRANGE_SEQUENCE) {
+    return (
+      <ArrangeSequenceForm
+        form={form}
+        onPatch={onPatch}
+        isDark={isDark}
+        sizeOffset={sizeOffset}
+      />
+    );
+  }
+  if (type === TYPES.MATCH_PAIR) {
+    return <MatchPairForm form={form} onPatch={onPatch} isDark={isDark} sizeOffset={sizeOffset} />;
+  }
   return null;
 }
 
-function SubQuestionEditor({ item, index, onChange, onRemove, isDark = false }) {
+function SubQuestionEditor({ item, index, onChange, onRemove, isDark = false, sizeOffset = 0 }) {
   const toSingleMultiSnapshot = (source) => {
     const options =
       Array.isArray(source.options) && source.options.length > 0
@@ -1189,7 +1235,9 @@ function SubQuestionEditor({ item, index, onChange, onRemove, isDark = false }) 
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
-        <div style={{ color: "var(--text-primary)", fontWeight: 700 }}>Question {index + 1}</div>
+        <div style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: 16 + sizeOffset }}>
+          Question {index + 1}
+        </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
             {CHILD_TYPES.map((type) => {
@@ -1236,7 +1284,7 @@ function SubQuestionEditor({ item, index, onChange, onRemove, isDark = false }) 
               );
             })}
           </div>
-          <Btn small danger onClick={onRemove}>
+          <Btn small danger sizeOffset={sizeOffset} onClick={onRemove}>
             Remove
           </Btn>
         </div>
@@ -1248,16 +1296,17 @@ function SubQuestionEditor({ item, index, onChange, onRemove, isDark = false }) 
         rows={2}
         value={item.question}
         onChange={(event) =>
-          onChange((currentItem) => ({ ...currentItem, question: event.target.value }))
+        onChange((currentItem) => ({ ...currentItem, question: event.target.value }))
         }
         placeholder="Enter the related question..."
+        sizeOffset={sizeOffset}
       />
 
       <div style={{ background: "var(--surface-bg)", borderRadius: 14, padding: "16px 18px" }}>
         <div
           style={{
             color: "var(--text-secondary)",
-            fontSize: 12,
+            fontSize: 12 + sizeOffset,
             fontWeight: 700,
             marginBottom: 12,
             textTransform: "uppercase",
@@ -1270,6 +1319,7 @@ function SubQuestionEditor({ item, index, onChange, onRemove, isDark = false }) 
           type={item.type}
           form={item}
           isDark={isDark}
+          sizeOffset={sizeOffset}
           onPatch={(patch) => onChange((currentItem) => ({ ...currentItem, ...patch }))}
         />
       </div>
@@ -1285,6 +1335,7 @@ function SubQuestionEditor({ item, index, onChange, onRemove, isDark = false }) 
               points: Math.max(1, parseInt(event.target.value, 10) || 1),
             }))
           }
+          sizeOffset={sizeOffset}
         />
         <Field
           label="Explanation"
@@ -1298,13 +1349,14 @@ function SubQuestionEditor({ item, index, onChange, onRemove, isDark = false }) 
             }))
           }
           placeholder="Optional explanation for this sub-question..."
+          sizeOffset={sizeOffset}
         />
       </div>
     </div>
   );
 }
 
-export function ComprehensiveForm({ form, onPatch, isDark = false }) {
+export function ComprehensiveForm({ form, onPatch, isDark = false, sizeOffset = 0 }) {
   const subQuestions = form.subQuestions || [];
   const [history, setHistory] = useState([]);
   const [future, setFuture] = useState([]);
@@ -1440,7 +1492,7 @@ export function ComprehensiveForm({ form, onPatch, isDark = false }) {
           background: "color-mix(in srgb, var(--surface-alt-bg) 82%, var(--brand-soft) 18%)",
           border: "1px solid color-mix(in srgb, var(--border-color) 68%, var(--brand-accent) 32%)",
           color: "color-mix(in srgb, var(--text-primary) 78%, var(--brand-primary) 22%)",
-          fontSize: 13,
+          fontSize: 13 + sizeOffset,
           lineHeight: 1.6,
         }}
       >
@@ -1454,6 +1506,7 @@ export function ComprehensiveForm({ form, onPatch, isDark = false }) {
           item={item}
           index={index}
           isDark={isDark}
+          sizeOffset={sizeOffset}
           onChange={(value) => updateSubQuestion(item.__uiId, index, value)}
           onRemove={() => removeSubQuestion(item.__uiId, index)}
         />
@@ -1462,6 +1515,7 @@ export function ComprehensiveForm({ form, onPatch, isDark = false }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
         <Btn
           ghost
+          sizeOffset={sizeOffset}
           onClick={() => patchSubQuestions([...(subQuestionsRef.current || []), createSubQuestion()])}
         >
           + Add Sub-question

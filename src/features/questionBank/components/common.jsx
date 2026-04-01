@@ -253,13 +253,14 @@ export function Btn({
   danger,
   disabled,
   type = "button",
+  sizeOffset = 0,
 }) {
   const base = {
     border: "none",
     borderRadius: small ? 8 : 12,
     cursor: disabled ? "not-allowed" : "pointer",
     fontWeight: 700,
-    fontSize: small ? 13 : 15,
+    fontSize: (small ? 13 : 15) + sizeOffset,
     padding: small ? "6px 12px" : "12px 24px",
     display: "inline-flex",
     alignItems: "center",
@@ -349,6 +350,7 @@ export function Field({
   children,
   disabled,
   rich = as === "textarea" || type === "text",
+  sizeOffset = 0,
 }) {
   const editorContext = useContext(EditorContext);
   const fieldId = useId();
@@ -432,7 +434,7 @@ export function Field({
     borderRadius: 10,
     padding: "8px 12px",
     color: "var(--text-primary)",
-    fontSize: 14,
+    fontSize: 14 + sizeOffset,
     outline: "none",
     fontFamily: "inherit",
     resize: as === "textarea" ? "vertical" : undefined,
@@ -443,7 +445,7 @@ export function Field({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       {label && (
-        <label style={{ color: "var(--text-secondary)", fontSize: 13, fontWeight: 600 }}>
+        <label style={{ color: "var(--text-secondary)", fontSize: 13 + sizeOffset, fontWeight: 600 }}>
           {label}
         </label>
       )}
@@ -502,20 +504,22 @@ export function Field({
                 borderRadius: 10,
                 background: "var(--input-bg)",
                 opacity: disabled ? 0.65 : 1,
-                minHeight: 42,
-                padding: "4px 12px",
+                minHeight: 38,
+                padding: "8px 12px",
                 color: "var(--text-primary)",
+                fontSize: 14 + sizeOffset,
                 textAlign: "left",
                 cursor: disabled ? "not-allowed" : "pointer",
               }}
             >
               {stripHtml(value || "") ? (
                 <div
+                  className="inline-rich-preview-content"
                   style={{ color: "var(--text-primary)" }}
                   dangerouslySetInnerHTML={{ __html: value || "" }}
                 />
               ) : (
-                <div style={{ color: "var(--text-muted)" }}>
+                <div className="inline-rich-preview-placeholder" style={{ color: "var(--text-muted)" }}>
                   {placeholder || "Click to edit"}
                 </div>
               )}
