@@ -266,57 +266,57 @@ export function normalise(question) {
 }
 
 export const validate = {
-  mcq(form) {
+  mcq(form, t = (key) => key) {
     const errors = [];
-    if (!stripHtml(form.question)) errors.push("Question required");
+    if (!stripHtml(form.question)) errors.push(t("Question required"));
     if (form.options.filter((option) => stripHtml(option)).length < 2) {
-      errors.push("At least 2 options required");
+      errors.push(t("At least 2 options required"));
     }
-    if (form.correctAnswer == null) errors.push("Select the correct answer");
+    if (form.correctAnswer == null) errors.push(t("Select the correct answer"));
     return errors;
   },
-  true_false(form) {
+  true_false(form, t = (key) => key) {
     const errors = [];
-    if (!stripHtml(form.question)) errors.push("Question required");
-    if (form.correctAnswer == null) errors.push("Select True or False");
+    if (!stripHtml(form.question)) errors.push(t("Question required"));
+    if (form.correctAnswer == null) errors.push(t("Select True or False"));
     return errors;
   },
-  multi_correct(form) {
+  multi_correct(form, t = (key) => key) {
     const errors = [];
-    if (!stripHtml(form.question)) errors.push("Question required");
+    if (!stripHtml(form.question)) errors.push(t("Question required"));
     if (form.options.filter((option) => stripHtml(option)).length < 2) {
-      errors.push("At least 2 options required");
+      errors.push(t("At least 2 options required"));
     }
-    if (!form.correctAnswers?.length) errors.push("Select at least 1 correct answer");
+    if (!form.correctAnswers?.length) errors.push(t("Select at least 1 correct answer"));
     return errors;
   },
-  arrange_sequence(form) {
+  arrange_sequence(form, t = (key) => key) {
     const errors = [];
-    if (!stripHtml(form.question)) errors.push("Question required");
+    if (!stripHtml(form.question)) errors.push(t("Question required"));
     if (form.options.filter((option) => stripHtml(option)).length < 2) {
-      errors.push("Enter at least 2 sequence items");
+      errors.push(t("Enter at least 2 sequence items"));
     }
     return errors;
   },
-  match_pair(form) {
+  match_pair(form, t = (key) => key) {
     const errors = [];
-    if (!stripHtml(form.question)) errors.push("Question required");
+    if (!stripHtml(form.question)) errors.push(t("Question required"));
     if (
       form.pairs.filter((pair) => stripHtml(pair.left) && stripHtml(pair.right)).length < 2
     ) {
-      errors.push("Need at least 2 complete pairs");
+      errors.push(t("Need at least 2 complete pairs"));
     }
     return errors;
   },
-  comprehensive(form) {
+  comprehensive(form, t = (key) => key) {
     const errors = [];
 
-    if (!stripHtml(form.question)) errors.push("Statement / passage required");
-    if (!form.subQuestions?.length) errors.push("Add at least 1 related question");
+    if (!stripHtml(form.question)) errors.push(t("Statement / passage required"));
+    if (!form.subQuestions?.length) errors.push(t("Add at least 1 related question"));
 
     (form.subQuestions || []).forEach((item, index) => {
-      validate[item.type](item).forEach((error) => {
-        errors.push(`Sub-question ${index + 1}: ${error}`);
+      validate[item.type](item, t).forEach((error) => {
+        errors.push(`${t("Sub-question")} ${index + 1}: ${error}`);
       });
     });
 

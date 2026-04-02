@@ -14,6 +14,8 @@ import {
   inputStyle,
 } from "./features/questionBank/constants";
 import { EditorContext } from "./features/questionBank/editorContext";
+import { translate, LANGUAGE_OPTIONS } from "./features/questionBank/i18n";
+import { LocalizationContext } from "./features/questionBank/localizationContext";
 import { api } from "./features/questionBank/api";
 import {
   buildPayload,
@@ -38,6 +40,7 @@ import {
 
 const THEME_STORAGE_KEY = "themeMode";
 const FONT_SCALE_STORAGE_KEY = "fontScale";
+const LANGUAGE_STORAGE_KEY = "language";
 
 function getInitialThemeMode() {
   try {
@@ -61,6 +64,19 @@ function getInitialFontScale() {
   }
 
   return 1;
+}
+
+function getInitialLanguage() {
+  try {
+    const savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+    if (savedLanguage === "en" || savedLanguage === "hi" || savedLanguage === "mr") {
+      return savedLanguage;
+    }
+  } catch {
+    // Ignore localStorage access issues and fall back to default.
+  }
+
+  return "en";
 }
 
 function NavIcon({ name }) {
@@ -165,7 +181,9 @@ export default function App() {
   });
   const [themeMode, setThemeMode] = useState(getInitialThemeMode);
   const [fontScale, setFontScale] = useState(getInitialFontScale);
+  const [language, setLanguage] = useState(getInitialLanguage);
   const [meta, setMeta] = useState(DEFAULT_META);
+  const t = useCallback((key) => translate(language, key), [language]);
   const statAccents =
     themeMode === "light"
       ? {
@@ -204,11 +222,11 @@ export default function App() {
         dispatch({ type: "QUESTIONS", value: questions.map(normalise) });
         dispatch({ type: "STATS", value: stats });
       } catch {
-        showToast("Cannot reach Spring Boot API at 8082. Check whether it is running.", "error");
+        showToast(t("Cannot reach Spring Boot API at 8082. Check whether it is running."), "error");
         dispatch({ type: "LOADING", value: false });
       }
     },
-    [showToast, state.filters]
+    [showToast, state.filters, t]
   );
 
   useEffect(() => {
@@ -231,6 +249,14 @@ export default function App() {
     localStorage.setItem(THEME_STORAGE_KEY, themeMode);
   }, [themeMode]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+    } catch {
+      // Ignore localStorage access issues.
+    }
+  }, [language]);
+
   const handleFilter = useCallback(
     (key, value) => {
       const nextFilters = { ...state.filters, [key]: value };
@@ -249,7 +275,7 @@ export default function App() {
   );
 
   const handleSave = useCallback(async () => {
-    const errors = validate[state.activeType](state.form);
+    const errors = validate[state.activeType](state.form, t);
     if (errors.length) {
       dispatch({ type: "ERRORS", value: errors });
       return;
@@ -260,33 +286,33 @@ export default function App() {
       const payload = buildPayload(state.activeType, state.form, meta);
       if (state.editingId) {
         await api.update(state.editingId, payload);
-        showToast("Question updated");
+        showToast(t("Question updated"));
       } else {
         await api.create(payload);
-        showToast("Created question");
+        showToast(t("Created question"));
       }
       dispatch({ type: "ERRORS", value: [] });
       dispatch({ type: "EDIT_CLEAR" });
       dispatch({ type: "VIEW", value: "list" });
       await refresh();
     } catch (error) {
-      showToast(error.message || "Save failed", "error");
+      showToast(error.message || t("Save failed"), "error");
     } finally {
       dispatch({ type: "SAVING", value: false });
     }
-  }, [meta, refresh, showToast, state.activeType, state.editingId, state.form]);
+  }, [meta, refresh, showToast, state.activeType, state.editingId, state.form, t]);
 
   const handleDelete = useCallback(
     async (id) => {
       try {
         await api.remove(id);
-        showToast(`Deleted question ${id}`, "warn");
+        showToast(`${t("Deleted question")} ${id}`, "warn");
         await refresh();
       } catch (error) {
-        showToast(error.message || "Delete failed", "error");
+        showToast(error.message || t("Delete failed"), "error");
       }
     },
-    [refresh, showToast]
+    [refresh, showToast, t]
   );
 
   const handleEdit = useCallback((question) => {
@@ -324,6 +350,8 @@ export default function App() {
   }, []);
 
   const createSizeOffset = 3;
+  const totalQuestionsLabel = t("Total Questions");
+  const foundQuestionsLabel = t("questions found");
 
   const renderMainForm = () => {
     if (state.activeType === TYPES.COMPREHENSIVE) {
@@ -356,7 +384,7 @@ export default function App() {
             letterSpacing: 1,
           }}
         >
-          Answer Configuration
+          {t("Answer Configuration")}
         </div>
         <AnswerConfiguration
           type={state.activeType}
@@ -388,62 +416,62 @@ export default function App() {
           letterSpacing: 1,
         }}
       >
-        Reference Metadata
+        {t("Reference Metadata")}
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
         <Field
-          label="Book Name"
+          label={t("Book Name")}
           value={meta.bookName}
           onChange={(event) =>
             setMeta((current) => ({ ...current, bookName: event.target.value }))
           }
-          placeholder="Book name"
+          placeholder={t("Book name")}
           sizeOffset={createSizeOffset}
         />
         <Field
-          label="Book Edition"
+          label={t("Book Edition")}
           value={meta.bookEdition}
           onChange={(event) =>
             setMeta((current) => ({ ...current, bookEdition: event.target.value }))
           }
-          placeholder="Enter book edition"
+          placeholder={t("Enter book edition")}
           sizeOffset={createSizeOffset}
         />
         <Field
-          label="ISBN"
+          label={t("ISBN")}
           value={meta.isbn}
           onChange={(event) =>
             setMeta((current) => ({ ...current, isbn: event.target.value }))
           }
-          placeholder="ISBN"
+          placeholder={t("ISBN")}
           sizeOffset={createSizeOffset}
         />
         <Field
-          label="Etg Number"
+          label={t("Etg Number")}
           value={meta.etgNumber}
           onChange={(event) =>
             setMeta((current) => ({ ...current, etgNumber: event.target.value }))
           }
-          placeholder="Etg number"
+          placeholder={t("Etg number")}
           sizeOffset={createSizeOffset}
         />
         <Field
-          label="Page Number"
+          label={t("Page Number")}
           value={meta.pageNumber}
           onChange={(event) =>
             setMeta((current) => ({ ...current, pageNumber: event.target.value }))
           }
-          placeholder="Enter page number"
+          placeholder={t("Enter page number")}
           sizeOffset={createSizeOffset}
         />
         <Field
-          label="Question Number"
+          label={t("Question Number")}
           value={meta.questionNumber}
           onChange={(event) =>
             setMeta((current) => ({ ...current, questionNumber: event.target.value }))
           }
-          placeholder="Question number"
+          placeholder={t("Question number")}
           sizeOffset={createSizeOffset}
         />
       </div>
@@ -451,6 +479,7 @@ export default function App() {
   );
 
   return (
+    <LocalizationContext.Provider value={{ language, setLanguage, t }}>
     <EditorContext.Provider value={{ activeFieldId, setActiveFieldId }}>
       <div
         style={{
@@ -474,13 +503,35 @@ export default function App() {
               <img src={cdacLogo} alt="CDAC logo" className="app-top-nav-logo" />
             </div>
             <div>
-              <div className="app-top-nav-title">Question Bank</div>
+              <div className="app-top-nav-title">{t("Question Bank")}</div>
               <div className="app-top-nav-subtitle">
-                {state.stats.total} QUESTIONS
+                {state.stats.total} {totalQuestionsLabel}
               </div>
             </div>
           </div>
           <div className="app-top-nav-actions">
+            <select
+              value={language}
+              onChange={(event) => setLanguage(event.target.value)}
+              aria-label={t("Language")}
+              title={t("Language")}
+              style={{
+                background: "var(--input-bg)",
+                border: "1px solid var(--border-color)",
+                borderRadius: 10,
+                padding: "10px 12px",
+                color: "var(--text-primary)",
+                fontSize: 14,
+                outline: "none",
+                cursor: "pointer",
+              }}
+            >
+              {LANGUAGE_OPTIONS.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
             <Btn
               ghost
               onClick={() =>
@@ -505,11 +556,11 @@ export default function App() {
             />
             {state.view !== "list" ? (
               <Btn variant="secondary" onClick={goListView}>
-                Back
+                {t("Back")}
               </Btn>
             ) : (
               <Btn onClick={goCreateView}>
-                + New Question
+                + {t("New Question")}
               </Btn>
             )}
           </div>
@@ -531,8 +582,8 @@ export default function App() {
           >
             {!isSidebarCollapsed && (
               <div>
-                <div className="app-sidebar-brand-title">Question</div>
-                <div className="app-sidebar-brand-subtitle">Bank</div>
+                <div className="app-sidebar-brand-title">{t("Question")}</div>
+                <div className="app-sidebar-brand-subtitle">{t("Bank")}</div>
               </div>
             )}
             <button
@@ -557,7 +608,7 @@ export default function App() {
               <span className="sidebar-row-chevron">
                 <NavIcon name="home" />
               </span>
-              {!isSidebarCollapsed && <span>Dashboard</span>}
+              {!isSidebarCollapsed && <span>{t("Dashboard")}</span>}
             </button>
 
             <button
@@ -573,7 +624,7 @@ export default function App() {
                 <span className="sidebar-row-chevron">
                   <NavIcon name="question" />
                 </span>
-                {!isSidebarCollapsed && <span>Question</span>}
+                {!isSidebarCollapsed && <span>{t("Question")}</span>}
               </span>
               {!isSidebarCollapsed && (
                 <span className="sidebar-row-chevron">
@@ -587,21 +638,21 @@ export default function App() {
                 {[
                   {
                     key: "create-question",
-                    label: "Create New Question",
+                    label: t("Create New Question"),
                     active: state.view === "create",
                     action: goCreateView,
                   },
                   {
                     key: "all-question",
-                    label: "All Question",
+                    label: t("All Question"),
                     active: state.view === "list",
                     action: goListView,
                   },
                   {
                     key: "question-category",
-                    label: "Question Category",
+                    label: t("Question Category"),
                     active: false,
-                    action: () => showToast("Question Category view coming soon", "warn"),
+                    action: () => showToast(t("Question Category view coming soon"), "warn"),
                   },
                 ].map((item) => (
                   <button
@@ -630,7 +681,7 @@ export default function App() {
                 <span className="sidebar-row-chevron">
                   <NavIcon name="exam" />
                 </span>
-                {!isSidebarCollapsed && <span>Exam</span>}
+                {!isSidebarCollapsed && <span>{t("Exam")}</span>}
               </span>
               {!isSidebarCollapsed && (
                 <span className="sidebar-row-chevron">
@@ -643,10 +694,10 @@ export default function App() {
               <div className="sidebar-submenu">
                 <button
                   type="button"
-                  onClick={() => showToast("Exam module coming soon", "warn")}
+                  onClick={() => showToast(t("Exam module coming soon"), "warn")}
                   className="sidebar-submenu-btn"
                 >
-                  Exam Dashboard
+                  {t("Exam Dashboard")}
                 </button>
               </div>
             )}
@@ -672,7 +723,7 @@ export default function App() {
                 }}
               >
                 <StatCard
-                  label="Total"
+                  label={t("Total")}
                   value={state.stats.total}
                   accent={statAccents.total}
                   active={!state.filters.type}
@@ -686,35 +737,35 @@ export default function App() {
                   onClick={() => handleTypeCardFilter(TYPES.MCQ)}
                 />
                 <StatCard
-                  label="True/False"
+                  label={t("True/False")}
                   value={state.stats.byType?.true_false || 0}
                   accent={statAccents.true_false}
                   active={state.filters.type === TYPES.TRUE_FALSE}
                   onClick={() => handleTypeCardFilter(TYPES.TRUE_FALSE)}
                 />
                 <StatCard
-                  label="Multi-Correct"
+                  label={t("Multi-Correct")}
                   value={state.stats.byType?.multi_correct || 0}
                   accent={statAccents.multi_correct}
                   active={state.filters.type === TYPES.MULTI_CORRECT}
                   onClick={() => handleTypeCardFilter(TYPES.MULTI_CORRECT)}
                 />
                 <StatCard
-                  label="Match Pair"
+                  label={t("Match Pair")}
                   value={state.stats.byType?.match_pair || 0}
                   accent={statAccents.match_pair}
                   active={state.filters.type === TYPES.MATCH_PAIR}
                   onClick={() => handleTypeCardFilter(TYPES.MATCH_PAIR)}
                 />
                 <StatCard
-                  label="Sequence"
+                  label={t("Sequence")}
                   value={state.stats.byType?.arrange_sequence || 0}
                   accent={statAccents.arrange_sequence}
                   active={state.filters.type === TYPES.ARRANGE_SEQUENCE}
                   onClick={() => handleTypeCardFilter(TYPES.ARRANGE_SEQUENCE)}
                 />
                 <StatCard
-                  label="Comprehension"
+                  label={t("Comprehension")}
                   value={state.stats.byType?.comprehensive || 0}
                   accent={statAccents.comprehensive}
                   active={state.filters.type === TYPES.COMPREHENSIVE}
@@ -739,18 +790,18 @@ export default function App() {
                   <input
                     value={state.filters.search}
                     onChange={(event) => handleFilter("search", event.target.value)}
-                    placeholder="Search questions..."
+                    placeholder={t("Search questions...")}
                     style={{ ...inputStyle, width: "100%" }}
                   />
                 </div>
                 {[
                   {
                     key: "difficulty",
-                    options: [["", "All Levels"], ...DIFFS.map((item) => [item, item])],
+                    options: [["", t("All Levels")], ...DIFFS.map((item) => [item, t(item)])],
                   },
                   {
                     key: "subject",
-                    options: [["", "All Subjects"], ...SUBJECTS.map((item) => [item, item])],
+                    options: [["", t("All Subjects")], ...SUBJECTS.map((item) => [item, t(item)])],
                   },
                 ].map(({ key, options }) => (
                   <select
@@ -782,16 +833,16 @@ export default function App() {
               ) : state.questions.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "80px 20px" }}>
                   <div style={{ color: "var(--text-muted)", fontSize: 18, fontWeight: 700 }}>
-                    No questions found
+                    {t("No questions found")}
                   </div>
                   <div style={{ color: "var(--text-secondary)", fontSize: 14, marginTop: 8 }}>
-                    Click "New Question" to get started
+                    {t('Click "New Question" to get started')}
                   </div>
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                   <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
-                    {state.questions.length} question{state.questions.length !== 1 ? "s" : ""} found
+                    {state.questions.length} {foundQuestionsLabel}
                   </div>
                   {state.questions.map((question) => (
                     <Card
@@ -811,7 +862,7 @@ export default function App() {
           {state.view === "create" && (
             <div style={{ width: "90%", maxWidth: "none", margin: "0 auto" }}>
               <h2 style={{ margin: "0 0 24px", fontWeight: 800, fontSize: 29 }}>
-                {state.editingId ? "Edit Question" : "Create Question"}
+                {state.editingId ? t("Edit Question") : t("Create Question")}
               </h2>
 
               <div
@@ -856,7 +907,7 @@ export default function App() {
                           }}
                         />
                       </div>
-                      {TYPE_LABEL[type]}
+                      {t(TYPE_LABEL[type])}
                     </button>
                   );
                 })}
@@ -865,21 +916,21 @@ export default function App() {
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 
                 <Field
-                  label="Instruction (optional)"
+                  label={t("Instruction (optional)")}
                   as="textarea"
                   rows={2}
                   value={state.form.instruction || ""}
                   onChange={(event) =>
                     dispatch({ type: "FORM", value: { instruction: event.target.value } })
                   }
-                  placeholder="Add optional instructions for students..."
+                  placeholder={t("Add optional instructions for students...")}
                   sizeOffset={createSizeOffset}
                 />
                 <Field
                   label={
                     state.activeType === TYPES.COMPREHENSIVE
-                      ? "Statement / Passage *"
-                      : "Question *"
+                      ? t("Statement / Passage *")
+                      : t("Question *")
                   }
                   as="textarea"
                   rows={state.activeType === TYPES.COMPREHENSIVE ? 6 : 3}
@@ -889,8 +940,8 @@ export default function App() {
                   }
                   placeholder={
                     state.activeType === TYPES.COMPREHENSIVE
-                      ? "Enter the common statement or passage here..."
-                      : "Enter your question here..."
+                      ? t("Enter the common statement or passage here...")
+                      : t("Enter your question here...")
                   }
                   sizeOffset={createSizeOffset}
                 />
@@ -903,7 +954,7 @@ export default function App() {
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
                   <Field
-                    label="Difficulty"
+                    label={t("Difficulty")}
                     as="select"
                     value={meta.difficulty}
                     onChange={(event) =>
@@ -912,11 +963,11 @@ export default function App() {
                     sizeOffset={createSizeOffset}
                   >
                     {DIFFS.map((item) => (
-                      <option key={item}>{item}</option>
+                      <option key={item}>{t(item)}</option>
                     ))}
                   </Field>
                   <Field
-                    label="Subject"
+                    label={t("Subject")}
                     as="select"
                     value={meta.subject}
                     onChange={(event) =>
@@ -925,11 +976,11 @@ export default function App() {
                     sizeOffset={createSizeOffset}
                   >
                     {SUBJECTS.map((item) => (
-                      <option key={item}>{item}</option>
+                      <option key={item}>{t(item)}</option>
                     ))}
                   </Field>
                   <Field
-                    label={state.activeType === TYPES.COMPREHENSIVE ? "Total Points" : "Points"}
+                    label={state.activeType === TYPES.COMPREHENSIVE ? t("Total Points") : t("Points")}
                     type="number"
                     value={
                       state.activeType === TYPES.COMPREHENSIVE
@@ -948,7 +999,7 @@ export default function App() {
                 </div>
 
                 <Field
-                  label="Explanation (optional)"
+                  label={t("Explanation (optional)")}
                   as="textarea"
                   rows={2}
                   value={state.form.explanation}
@@ -957,8 +1008,8 @@ export default function App() {
                   }
                   placeholder={
                     state.activeType === TYPES.COMPREHENSIVE
-                      ? "Optional explanation for the full passage..."
-                      : "Explain the correct answer..."
+                      ? t("Optional explanation for the full passage...")
+                      : t("Explain the correct answer...")
                   }
                   sizeOffset={createSizeOffset}
                 />
@@ -992,14 +1043,14 @@ export default function App() {
                       dispatch({ type: "EDIT_CLEAR" });
                     }}
                   >
-                    Cancel
+                    {t("Cancel")}
                   </Btn>
                   <Btn onClick={handleSave} disabled={state.saving} sizeOffset={createSizeOffset}>
                     {state.saving
-                      ? "Saving..."
+                      ? t("Saving...")
                       : state.editingId
-                        ? `Update`
-                        : "Save Question"}
+                        ? t("Update")
+                        : t("Save Question")}
                   </Btn>
                 </div>
               </div>
@@ -1007,7 +1058,6 @@ export default function App() {
           )}
           </div>
         </div>
-
         {preview && (
           <Preview
             question={preview}
@@ -1024,5 +1074,6 @@ export default function App() {
         )}
       </div>
     </EditorContext.Provider>
+    </LocalizationContext.Provider>
   );
 }

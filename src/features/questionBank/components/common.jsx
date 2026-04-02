@@ -5,6 +5,7 @@ import "ckeditor5/ckeditor5.css";
 import crossIcon from "../../../assets/ui/cross.png";
 
 import { EditorContext } from "../editorContext";
+import { useLocalization } from "../localizationContext";
 import { getEditorConfig } from "../editorConfig";
 import { stripHtml } from "../questionUtils";
 
@@ -46,6 +47,7 @@ function MoonIcon({ size = 14, color = "currentColor" }) {
 }
 
 export function Toast({ msg, kind, onClose }) {
+  const { t } = useLocalization();
   const background =
     kind === "error" ? "var(--danger)" : kind === "warn" ? "var(--warning)" : "var(--success)";
 
@@ -81,7 +83,7 @@ export function Toast({ msg, kind, onClose }) {
       >
         <img
           src={crossIcon}
-          alt="Close"
+          alt={t("Close")}
           aria-hidden="true"
           style={{ width: 16, height: 16, objectFit: "contain" }}
         />
@@ -91,13 +93,14 @@ export function Toast({ msg, kind, onClose }) {
 }
 
 export function ThemeToggle({ isDark, onToggle }) {
+  const { t } = useLocalization();
   return (
     <button
       type="button"
       onClick={onToggle}
-      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label={isDark ? t("Switch to light mode") : t("Switch to dark mode")}
       aria-pressed={isDark}
-      title={isDark ? "Dark mode enabled" : "Light mode enabled"}
+      title={isDark ? t("Dark mode enabled") : t("Light mode enabled")}
       style={{
         position: "relative",
         width: 74,
@@ -152,6 +155,7 @@ export function ThemeToggle({ isDark, onToggle }) {
 }
 
 export function Spinner() {
+  const { t } = useLocalization();
   return (
     <div
       style={{
@@ -174,7 +178,7 @@ export function Spinner() {
         }}
       />
       <span style={{ color: "var(--text-muted)", fontSize: 14 }}>
-        Fetching from Spring Boot...
+        {t("Fetching from Spring Boot...")}
       </span>
     </div>
   );
@@ -465,26 +469,21 @@ export function Field({
               }`}
               style={{
                 width: "100%",
-                border: "1px solid var(--border-color)",
-                borderRadius: 10,
-                background: "var(--input-bg)",
                 opacity: disabled ? 0.65 : 1,
                 overflow: "hidden",
                 display: isRichEditorOpen ? "block" : "none",
               }}
             >
-              <div style={{ padding: 6 }}>
-                <CKEditor
-                  editor={ClassicEditor}
-                  config={getEditorConfig(placeholder, as !== "textarea")}
-                  data={value || ""}
-                  onReady={(editor) => {
-                    editorInstanceRef.current = editor;
-                    focusEditorAtEnd(editor);
-                  }}
-                  onChange={(_, editor) => onChange?.({ target: { value: editor.getData() } })}
-                />
-              </div>
+              <CKEditor
+                editor={ClassicEditor}
+                config={getEditorConfig(placeholder, as !== "textarea")}
+                data={value || ""}
+                onReady={(editor) => {
+                  editorInstanceRef.current = editor;
+                  focusEditorAtEnd(editor);
+                }}
+                onChange={(_, editor) => onChange?.({ target: { value: editor.getData() } })}
+              />
             </div>
           )}
           {!isRichEditorOpen && (

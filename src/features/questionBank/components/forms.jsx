@@ -29,18 +29,20 @@ import {
   TYPES,
   removeButtonStyle,
 } from "../constants";
+import { useLocalization } from "../localizationContext";
 import { createSubQuestion, sumSubQuestionPoints } from "../questionUtils";
 import { Btn, Field } from "./common";
 
 function UndoIconButton({ onClick, disabled, isDark = false }) {
+  const { t } = useLocalization();
   const iconSrc = isDark ? undoDarkIcon : undoIcon;
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      title="Undo"
-      aria-label="Undo"
+      title={t("Undo")}
+      aria-label={t("Undo")}
       style={{
         width: 35,
         height: 10,
@@ -71,14 +73,15 @@ function UndoIconButton({ onClick, disabled, isDark = false }) {
 }
 
 function RedoIconButton({ onClick, disabled, isDark = false }) {
+  const { t } = useLocalization();
   const iconSrc = isDark ? redoDarkIcon : redoIcon;
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      title="Redo"
-      aria-label="Redo"
+      title={t("Redo")}
+      aria-label={t("Redo")}
       style={{
         width: 10,
         height: 10,
@@ -184,6 +187,7 @@ function mapSubQuestionSingleAndMulti(fromType, toType, item) {
 }
 
 function MCQForm({ form, onPatch, isDark = false, sizeOffset = 0 }) {
+  const { t } = useLocalization();
   const [history, setHistory] = useState([]);
   const [future, setFuture] = useState([]);
   const didLocalPatchRef = useRef(false);
@@ -335,7 +339,7 @@ function MCQForm({ form, onPatch, isDark = false, sizeOffset = 0 }) {
             <Field
               value={option}
               onChange={(event) => setOption(index, event.target.value)}
-              placeholder={`Option ${String.fromCharCode(65 + index)}`}
+              placeholder={`${t("Option ")}${String.fromCharCode(65 + index)}`}
               sizeOffset={sizeOffset}
             />
           </div>
@@ -343,7 +347,7 @@ function MCQForm({ form, onPatch, isDark = false, sizeOffset = 0 }) {
             <button type="button" onClick={() => removeOption(index)} style={removeButtonStyle}>
               <img
                 src={crossIcon}
-                alt="Remove option"
+                alt={t("Remove option")}
                 aria-hidden="true"
                 style={{ width: 16, height: 16, objectFit: "contain" }}
               />
@@ -360,7 +364,7 @@ function MCQForm({ form, onPatch, isDark = false, sizeOffset = 0 }) {
           }}
           style={addTextButtonStyle(sizeOffset)}
         >
-          + Add Option
+          {t("+ Add Option")}
         </button>
       )}
     </div>
@@ -368,6 +372,7 @@ function MCQForm({ form, onPatch, isDark = false, sizeOffset = 0 }) {
 }
 
 function TrueFalseForm({ form, onPatch, sizeOffset = 0 }) {
+  const { t } = useLocalization();
   return (
     <div style={{ display: "flex", gap: 16 }}>
       {[true, false].map((value) => (
@@ -403,7 +408,7 @@ function TrueFalseForm({ form, onPatch, sizeOffset = 0 }) {
                 : "var(--text-secondary)",
           }}
         >
-          {value ? "TRUE" : "FALSE"}
+          {value ? t("True") : t("False")}
         </button>
       ))}
     </div>
@@ -411,6 +416,7 @@ function TrueFalseForm({ form, onPatch, sizeOffset = 0 }) {
 }
 
 function MultiCorrectForm({ form, onPatch, isDark = false, sizeOffset = 0 }) {
+  const { t } = useLocalization();
   const [history, setHistory] = useState([]);
   const [future, setFuture] = useState([]);
   const didLocalPatchRef = useRef(false);
@@ -573,7 +579,7 @@ function MultiCorrectForm({ form, onPatch, isDark = false, sizeOffset = 0 }) {
             <Field
               value={option}
               onChange={(event) => setOption(index, event.target.value)}
-              placeholder={`Option ${String.fromCharCode(65 + index)}`}
+              placeholder={`${t("Option ")}${String.fromCharCode(65 + index)}`}
               sizeOffset={sizeOffset}
             />
           </div>
@@ -581,7 +587,7 @@ function MultiCorrectForm({ form, onPatch, isDark = false, sizeOffset = 0 }) {
             <button type="button" onClick={() => removeOption(index)} style={removeButtonStyle}>
               <img
                 src={crossIcon}
-                alt="Remove option"
+                alt={t("Remove option")}
                 aria-hidden="true"
                 style={{ width: 16, height: 16, objectFit: "contain" }}
               />
@@ -598,7 +604,7 @@ function MultiCorrectForm({ form, onPatch, isDark = false, sizeOffset = 0 }) {
           }}
           style={addTextButtonStyle(sizeOffset)}
         >
-          + Add Option
+          {t("+ Add Option")}
         </button>
       )}
     </div>
@@ -615,6 +621,7 @@ function SequenceSortableRow({
   showDropHighlight,
   sizeOffset = 0,
 }) {
+  const { t } = useLocalization();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id });
 
@@ -640,8 +647,8 @@ function SequenceSortableRow({
     >
       <button
         type="button"
-        title="Drag to reorder"
-        aria-label={`Drag sequence item ${index + 1}`}
+        title={t("Drag to reorder")}
+        aria-label={`${t("Drag sequence item")} ${index + 1}`}
         {...attributes}
         {...listeners}
         style={{
@@ -680,7 +687,7 @@ function SequenceSortableRow({
         <Field
           value={option}
           onChange={(event) => setItem(index, event.target.value)}
-          placeholder={`Sequence item ${index + 1}`}
+          placeholder={`${t("Sequence item")} ${index + 1}`}
           sizeOffset={sizeOffset}
         />
       </div>
@@ -688,7 +695,7 @@ function SequenceSortableRow({
         <button type="button" onClick={() => removeItem(index)} style={removeButtonStyle}>
           <img
             src={crossIcon}
-            alt="Remove item"
+            alt={t("Remove item")}
             aria-hidden="true"
             style={{ width: 16, height: 16, objectFit: "contain" }}
           />
@@ -699,6 +706,7 @@ function SequenceSortableRow({
 }
 
 function ArrangeSequenceForm({ form, onPatch, isDark = false, sizeOffset = 0 }) {
+  const { t } = useLocalization();
   const [history, setHistory] = useState([]);
   const [future, setFuture] = useState([]);
   const didLocalPatchRef = useRef(false);
@@ -853,10 +861,10 @@ function ArrangeSequenceForm({ form, onPatch, isDark = false, sizeOffset = 0 }) 
         <RedoIconButton onClick={redo} disabled={future.length === 0} isDark={isDark} />
       </div>
       <p style={{ color: "var(--text-secondary)", fontSize: 13 + sizeOffset, margin: 0 }}>
-        Enter the sequence items in the correct order. Students will arrange them in this order.
+        {t("Enter the sequence items in the correct order. Students will arrange them in this order.")}
       </p>
       <div style={{ color: "var(--text-muted)", fontSize: 12 + sizeOffset, marginTop: -4 }}>
-        Drag and drop to reorder items
+        {t("Drag and drop to reorder items")}
       </div>
       <DndContext
         sensors={sensors}
@@ -914,7 +922,7 @@ function ArrangeSequenceForm({ form, onPatch, isDark = false, sizeOffset = 0 }) 
           onClick={addItem}
           style={addTextButtonStyle(sizeOffset)}
         >
-          + Add Item
+          {t("+ Add Item")}
         </button>
       )}
     </div>
@@ -922,6 +930,7 @@ function ArrangeSequenceForm({ form, onPatch, isDark = false, sizeOffset = 0 }) 
 }
 
 function MatchPairForm({ form, onPatch, isDark = false, sizeOffset = 0 }) {
+  const { t } = useLocalization();
   const [history, setHistory] = useState([]);
   const [future, setFuture] = useState([]);
   const didLocalPatchRef = useRef(false);
@@ -1043,11 +1052,11 @@ function MatchPairForm({ form, onPatch, isDark = false, sizeOffset = 0 }) {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr auto", gap: 10 }}>
         <span style={{ color: "var(--brand-accent)", fontWeight: 700, fontSize: 13 + sizeOffset, textAlign: "center" }}>
-          Column A
+          {t("Column A")}
         </span>
         <span />
         <span style={{ color: "var(--brand-secondary)", fontWeight: 700, fontSize: 13 + sizeOffset, textAlign: "center" }}>
-          Column B
+          {t("Column B")}
         </span>
         <span />
       </div>
@@ -1065,14 +1074,14 @@ function MatchPairForm({ form, onPatch, isDark = false, sizeOffset = 0 }) {
             <Field
               value={pair.left}
               onChange={(event) => setPair(index, "left", event.target.value)}
-              placeholder={`Term ${index + 1}`}
+              placeholder={`${t("Column A")} ${index + 1}`}
               sizeOffset={sizeOffset}
             />
           </div>
           <span style={{ color: "var(--text-muted)", fontSize: 18 }}>
             <img
                 src={twoSidedArrowIcon}
-                alt="Remove pair"
+                alt={t("Remove pair")}
                 aria-hidden="true"
                 style={{ width: 16, height: 16, objectFit: "contain" }}
               />
@@ -1081,7 +1090,7 @@ function MatchPairForm({ form, onPatch, isDark = false, sizeOffset = 0 }) {
             <Field
               value={pair.right}
               onChange={(event) => setPair(index, "right", event.target.value)}
-              placeholder={`Definition ${index + 1}`}
+              placeholder={`${t("Column B")} ${index + 1}`}
               sizeOffset={sizeOffset}
             />
           </div>
@@ -1093,7 +1102,7 @@ function MatchPairForm({ form, onPatch, isDark = false, sizeOffset = 0 }) {
             >
               <img
                 src={crossIcon}
-                alt="Remove pair"
+                alt={t("Remove pair")}
                 aria-hidden="true"
                 style={{ width: 16, height: 16, objectFit: "contain" }}
               />
@@ -1109,7 +1118,7 @@ function MatchPairForm({ form, onPatch, isDark = false, sizeOffset = 0 }) {
           onClick={addPair}
           style={addTextButtonStyle(sizeOffset)}
         >
-          + Add Pair
+          {t("+ Add Pair")}
         </button>
       )}
     </div>
@@ -1147,6 +1156,7 @@ export function AnswerConfiguration({ type, form, onPatch, isDark = false, sizeO
 }
 
 function SubQuestionEditor({ item, index, onChange, onRemove, isDark = false, sizeOffset = 0 }) {
+  const { t } = useLocalization();
   const toSingleMultiSnapshot = (source) => {
     const options =
       Array.isArray(source.options) && source.options.length > 0
@@ -1236,7 +1246,7 @@ function SubQuestionEditor({ item, index, onChange, onRemove, isDark = false, si
     >
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
         <div style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: 16 + sizeOffset }}>
-          Question {index + 1}
+          {t("Question ")}{index + 1}
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
@@ -1247,8 +1257,8 @@ function SubQuestionEditor({ item, index, onChange, onRemove, isDark = false, si
                   key={type}
                   type="button"
                   onClick={() => handleTypeChange(type)}
-                  title={TYPE_LABEL[type]}
-                  aria-label={TYPE_LABEL[type]}
+                  title={t(TYPE_LABEL[type])}
+                  aria-label={t(TYPE_LABEL[type])}
                   aria-pressed={isActive}
                   style={{
                     width: 38,
@@ -1285,20 +1295,20 @@ function SubQuestionEditor({ item, index, onChange, onRemove, isDark = false, si
             })}
           </div>
           <Btn small danger sizeOffset={sizeOffset} onClick={onRemove}>
-            Remove
+            {t("Remove")}
           </Btn>
         </div>
       </div>
 
       <Field
-        label="Question *"
+        label={t("Question *")}
         as="textarea"
         rows={2}
         value={item.question}
         onChange={(event) =>
         onChange((currentItem) => ({ ...currentItem, question: event.target.value }))
         }
-        placeholder="Enter the related question..."
+        placeholder={t("Enter the related question...")}
         sizeOffset={sizeOffset}
       />
 
@@ -1313,7 +1323,7 @@ function SubQuestionEditor({ item, index, onChange, onRemove, isDark = false, si
             letterSpacing: 1,
           }}
         >
-          Answer Configuration
+          {t("Answer Configuration")}
         </div>
         <AnswerConfiguration
           type={item.type}
@@ -1326,7 +1336,7 @@ function SubQuestionEditor({ item, index, onChange, onRemove, isDark = false, si
 
       <div style={{ display: "grid", gridTemplateColumns: "120px 1fr", gap: 16 }}>
         <Field
-          label="Points"
+          label={t("Points")}
           type="number"
           value={item.points}
           onChange={(event) =>
@@ -1338,7 +1348,7 @@ function SubQuestionEditor({ item, index, onChange, onRemove, isDark = false, si
           sizeOffset={sizeOffset}
         />
         <Field
-          label="Explanation"
+          label={t("Explanation")}
           as="textarea"
           rows={2}
           value={item.explanation}
@@ -1348,7 +1358,7 @@ function SubQuestionEditor({ item, index, onChange, onRemove, isDark = false, si
               explanation: event.target.value,
             }))
           }
-          placeholder="Optional explanation for this sub-question..."
+          placeholder={t("Optional explanation for this sub-question...")}
           sizeOffset={sizeOffset}
         />
       </div>
@@ -1357,6 +1367,7 @@ function SubQuestionEditor({ item, index, onChange, onRemove, isDark = false, si
 }
 
 export function ComprehensiveForm({ form, onPatch, isDark = false, sizeOffset = 0 }) {
+  const { t } = useLocalization();
   const subQuestions = form.subQuestions || [];
   const [history, setHistory] = useState([]);
   const [future, setFuture] = useState([]);
@@ -1496,8 +1507,7 @@ export function ComprehensiveForm({ form, onPatch, isDark = false, sizeOffset = 
           lineHeight: 1.6,
         }}
       >
-        One common statement can have many child questions. Total points are the sum
-        of all child questions.
+        {t("One common statement can have many child questions. Total points are the sum of all child questions.")}
       </div>
 
       {subQuestions.map((item, index) => (
@@ -1518,7 +1528,7 @@ export function ComprehensiveForm({ form, onPatch, isDark = false, sizeOffset = 
           sizeOffset={sizeOffset}
           onClick={() => patchSubQuestions([...(subQuestionsRef.current || []), createSubQuestion()])}
         >
-          + Add Sub-question
+          {t("+ Add Sub-question")}
         </Btn>
         {/* <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>
           Total points: {sumSubQuestionPoints(subQuestions)}

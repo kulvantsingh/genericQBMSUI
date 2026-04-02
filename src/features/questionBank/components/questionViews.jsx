@@ -6,6 +6,7 @@ import sequenceArrowIcon from "../../../assets/ui/down-arrow.png";
 import sequenceArrowDarkIcon from "../../../assets/ui/down-arrow-dark.png";
 
 import { pillStyle, TYPE_COLOR, TYPE_ICON, TYPE_LABEL, TYPES } from "../constants";
+import { useLocalization } from "../localizationContext";
 import { Btn } from "./common";
 
 function hashString(value) {
@@ -44,6 +45,7 @@ function optionLabel(index) {
 }
 
 function MatchPairBoard({ question }) {
+  const { t } = useLocalization();
   const pairs = question.pairs || [];
   const rightOptions = useMemo(
     () =>
@@ -160,7 +162,7 @@ function MatchPairBoard({ question }) {
     <div className="qb-match-board">
       <div className="qb-match-columns qb-match-columns-with-lines">
         <div className="qb-match-column" ref={leftColumnRef}>
-          <div className="qb-match-column-title">Column A</div>
+          <div className="qb-match-column-title">{t("Column A")}</div>
           {pairs.map((pair, index) => (
             <div
               key={`left-${index}`}
@@ -205,7 +207,7 @@ function MatchPairBoard({ question }) {
         </div>
 
         <div className="qb-match-column" ref={rightColumnRef}>
-          <div className="qb-match-column-title">Column B</div>
+          <div className="qb-match-column-title">{t("Column B")}</div>
           {shuffledRightOptions.map((item, index) => (
             <div
               key={`right-${item.pairIndex}-${index}`}
@@ -222,7 +224,7 @@ function MatchPairBoard({ question }) {
       </div>
 
       <div className="qb-match-answer-map">
-        <span className="qb-match-answer-title">Correct Mapping</span>
+        <span className="qb-match-answer-title">{t("Correct Mapping")}</span>
         <div className="qb-match-answer-grid">
           {pairs.map((_, index) => (
             <div key={`map-${index}`} className="qb-match-answer-row">
@@ -283,7 +285,7 @@ function renderOptionGrid(options, isCorrect, correctClass = "") {
   );
 }
 
-function renderQuestionBody(question, isDark = false) {
+function renderQuestionBody(question, isDark = false, t = (value) => value) {
   if (question.type === TYPES.MCQ) {
     return renderOptionGrid(question.options, (index) => index === question.correctAnswer);
   }
@@ -291,11 +293,11 @@ function renderQuestionBody(question, isDark = false) {
   if (question.type === TYPES.TRUE_FALSE) {
     return (
       <span className="qb-true-false-answer">
-        Answer:{" "}
+        {t("Answer:")}{" "}
         {question.correctAnswer === true
-          ? "True"
+          ? t("True")
           : question.correctAnswer === false
-            ? "False"
+            ? t("False")
             : "-"}
       </span>
     );
@@ -351,14 +353,14 @@ function renderQuestionBody(question, isDark = false) {
             style={{ "--sub-type-color": TYPE_COLOR[item.type] }}
           >
             <div className="qb-comprehensive-item-meta">
-              <span className="qb-comprehensive-item-type">{TYPE_LABEL[item.type]}</span>
-              <span className="qb-comprehensive-item-points">{item.points} pt</span>
+              <span className="qb-comprehensive-item-type">{t(TYPE_LABEL[item.type])}</span>
+              <span className="qb-comprehensive-item-points">{item.points} {t(item.points !== 1 ? "points" : "point")}</span>
             </div>
             <div className="qb-comprehensive-item-question">
               <span>{index + 1}.</span>
               <HtmlContent html={item.question} style={{ flex: 1 }} />
             </div>
-            {renderQuestionBody(item, isDark)}
+            {renderQuestionBody(item, isDark, t)}
           </div>
         ))}
       </div>
@@ -380,6 +382,7 @@ function getMetadataEntries(question) {
 }
 
 function MetadataPanel({ question, compact = false }) {
+  const { t } = useLocalization();
   const entries = getMetadataEntries(question);
 
   if (entries.length === 0) return null;
@@ -387,13 +390,13 @@ function MetadataPanel({ question, compact = false }) {
   return (
     <details className={`qb-metadata-panel${compact ? " is-compact" : ""}`}>
       <summary className="qb-metadata-summary">
-        <span className="qb-metadata-title">Reference Metadata</span>
+        <span className="qb-metadata-title">{t("Reference Metadata")}</span>
         <span className="qb-metadata-toggle" />
       </summary>
       <div className="qb-metadata-grid">
         {entries.map(([label, value]) => (
           <div key={label} className="qb-metadata-card">
-            <div className="qb-metadata-label">{label}</div>
+            <div className="qb-metadata-label">{t(label)}</div>
             <HtmlContent html={value} className="qb-metadata-value" />
           </div>
         ))}
@@ -403,6 +406,7 @@ function MetadataPanel({ question, compact = false }) {
 }
 
 export function Card({ question, onEdit, onDelete, onPreview, isDark = false }) {
+  const { t } = useLocalization();
   const color = TYPE_COLOR[question.type];
 
   return (
@@ -416,21 +420,21 @@ export function Card({ question, onEdit, onDelete, onPreview, isDark = false }) 
               alt={`${TYPE_LABEL[question.type]} icon`}
               className="qb-type-icon"
             />
-            {TYPE_LABEL[question.type]}
+            {t(TYPE_LABEL[question.type])}
           </span>
-          <span className="qb-meta-pill">{question.difficulty}</span>
-          <span className="qb-meta-pill">{question.subject}</span>
-          <span className="qb-meta-pill">{question.points}pt</span>
+          <span className="qb-meta-pill">{t(question.difficulty)}</span>
+          <span className="qb-meta-pill">{t(question.subject)}</span>
+          <span className="qb-meta-pill">{question.points} {t(question.points !== 1 ? "points" : "point")}</span>
         </div>
         <div className="qb-action-group">
           <Btn small ghost onClick={() => onPreview(question)}>
-            View
+            {t("View")}
           </Btn>
           <Btn small ghost onClick={() => onEdit(question)}>
-            Edit
+            {t("Edit")}
           </Btn>
           <Btn small danger onClick={() => onDelete(question.id)}>
-            Delete
+            {t("Delete")}
           </Btn>
         </div>
       </div>
@@ -441,12 +445,12 @@ export function Card({ question, onEdit, onDelete, onPreview, isDark = false }) 
 
       {question.instruction && (
         <div className="qb-instruction-box">
-          <div className="qb-instruction-title">INSTRUCTION</div>
+          <div className="qb-instruction-title">{t("INSTRUCTION")}</div>
           <HtmlContent html={question.instruction} className="qb-instruction-text" />
         </div>
       )}
 
-      {renderQuestionBody(question, isDark)}
+      {renderQuestionBody(question, isDark, t)}
 
       <MetadataPanel question={question} compact />
 
@@ -458,6 +462,7 @@ export function Card({ question, onEdit, onDelete, onPreview, isDark = false }) 
 }
 
 export function Preview({ question, onClose, isDark = false }) {
+  const { t } = useLocalization();
   const color = TYPE_COLOR[question.type];
 
   return (
@@ -499,7 +504,7 @@ export function Preview({ question, onClose, isDark = false }) {
                 filter: "var(--type-icon-filter, none)",
               }}
             />
-            {TYPE_LABEL[question.type]}
+            {t(TYPE_LABEL[question.type])}
           </span>
           <button
             onClick={onClose}
@@ -513,7 +518,7 @@ export function Preview({ question, onClose, isDark = false }) {
               fontWeight: 700,
             }}
           >
-            Close
+            {t("Close")}
           </button>
         </div>
 
@@ -535,7 +540,7 @@ export function Preview({ question, onClose, isDark = false }) {
             }}
           >
             <div style={{ color: "var(--text-secondary)", fontSize: 12, fontWeight: 700, marginBottom: 6 }}>
-              INSTRUCTION
+              {t("INSTRUCTION")}
             </div>
             <HtmlContent
               html={question.instruction}
@@ -544,7 +549,7 @@ export function Preview({ question, onClose, isDark = false }) {
           </div>
         )}
 
-        {renderQuestionBody(question, isDark)}
+        {renderQuestionBody(question, isDark, t)}
 
         <MetadataPanel question={question} />
 
@@ -559,7 +564,7 @@ export function Preview({ question, onClose, isDark = false }) {
             }}
           >
             <span style={{ color: "var(--text-secondary)", fontSize: 13, fontWeight: 700 }}>
-              EXPLANATION{" "}
+              {t("EXPLANATION")}{" "}
             </span>
             <HtmlContent
               html={question.explanation}
@@ -569,7 +574,7 @@ export function Preview({ question, onClose, isDark = false }) {
         )}
 
         <div style={{ marginTop: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {[question.difficulty, question.subject, `${question.points} point${question.points !== 1 ? "s" : ""}`].map((item) => (
+          {[t(question.difficulty), t(question.subject), `${question.points} ${t(question.points !== 1 ? "points" : "point")}`].map((item) => (
             <span key={item} style={pillStyle}>
               {item}
             </span>
