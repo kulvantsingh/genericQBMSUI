@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import "./styles/app-layout.css";
 import cdacLogo from "./assets/cdac.png";
 
@@ -183,6 +183,10 @@ export default function App() {
   const [fontScale, setFontScale] = useState(getInitialFontScale);
   const [language, setLanguage] = useState(getInitialLanguage);
   const [meta, setMeta] = useState(DEFAULT_META);
+  const [pendingDeleteIds, setPendingDeleteIds] = useState([]);
+  const toastTimerRef = useRef(null);
+  const pendingDeleteTimersRef = useRef(new Map());
+  const activeDeleteToastIdRef = useRef(null);
   const t = useCallback((key) => translate(language, key), [language]);
   const statAccents =
     themeMode === "light"
@@ -205,10 +209,55 @@ export default function App() {
           comprehensive: "#4cc9f0",
         };
 
-  const showToast = useCallback((message, kind = "success") => {
-    dispatch({ type: "TOAST", value: { msg: message, kind } });
-    setTimeout(() => dispatch({ type: "TOAST", value: null }), 3500);
+  const showToast = useCallback((message, kind = "success", options = {}) => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+      toastTimerRef.current = null;
+    }
+
+    dispatch({
+      type: "TOAST",
+      value: {
+        msg: message,
+        kind,
+        actionLabel: options.actionLabel || null,
+        onAction: options.onAction || null,
+      },
+    });
+
+    const duration = options.duration ?? 3500;
+    if (duration > 0) {
+      toastTimerRef.current = setTimeout(() => {
+        dispatch({ type: "TOAST", value: null });
+        toastTimerRef.current = null;
+      }, duration);
+    }
   }, []);
+
+  const closeToast = useCallback(() => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+      toastTimerRef.current = null;
+    }
+    activeDeleteToastIdRef.current = null;
+    dispatch({ type: "TOAST", value: null });
+  }, []);
+
+  const showPendingDeleteToast = useCallback(
+    (id, secondsRemaining, onUndo) => {
+      activeDeleteToastIdRef.current = id;
+      dispatch({
+        type: "TOAST",
+        value: {
+          msg: `${t("Question will be deleted in")} ${secondsRemaining} ${t("seconds")}`,
+          kind: "warn",
+          actionLabel: t("Undo"),
+          onAction: onUndo,
+        },
+      });
+    },
+    [t]
+  );
 
   const refresh = useCallback(
     async (filters) => {
@@ -257,6 +306,17 @@ export default function App() {
     }
   }, [language]);
 
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+      pendingDeleteTimersRef.current.forEach(({ timeoutId, intervalId }) => {
+        clearTimeout(timeoutId);
+        clearInterval(intervalId);
+      });
+      pendingDeleteTimersRef.current.clear();
+    };
+  }, []);
+
   const handleFilter = useCallback(
     (key, value) => {
       const nextFilters = { ...state.filters, [key]: value };
@@ -302,17 +362,70 @@ export default function App() {
     }
   }, [meta, refresh, showToast, state.activeType, state.editingId, state.form, t]);
 
-  const handleDelete = useCallback(
-    async (id) => {
-      try {
-        await api.remove(id);
-        showToast(`${t("Deleted question")} ${id}`, "warn");
-        await refresh();
-      } catch (error) {
-        showToast(error.message || t("Delete failed"), "error");
+  const undoPendingDelete = useCallback(
+    (id) => {
+      const timer = pendingDeleteTimersRef.current.get(id);
+      if (timer) {
+        clearTimeout(timer.timeoutId);
+        clearInterval(timer.intervalId);
+        pendingDeleteTimersRef.current.delete(id);
       }
+      setPendingDeleteIds((current) => current.filter((item) => item !== id));
+      if (activeDeleteToastIdRef.current === id) {
+        activeDeleteToastIdRef.current = null;
+      }
+      showToast(t("Question deletion canceled"), "success");
     },
-    [refresh, showToast, t]
+    [showToast, t]
+  );
+
+  const handleDelete = useCallback(
+    (id) => {
+      if (pendingDeleteTimersRef.current.has(id)) return;
+
+      setPendingDeleteIds((current) => (current.includes(id) ? current : [...current, id]));
+
+      let secondsRemaining = 10;
+      const onUndo = () => undoPendingDelete(id);
+      showPendingDeleteToast(id, secondsRemaining, onUndo);
+
+      const intervalId = setInterval(() => {
+        secondsRemaining -= 1;
+        if (secondsRemaining <= 0) {
+          clearInterval(intervalId);
+          return;
+        }
+        if (activeDeleteToastIdRef.current === id) {
+          showPendingDeleteToast(id, secondsRemaining, onUndo);
+        }
+      }, 1000);
+
+      const timeoutId = setTimeout(async () => {
+        clearInterval(intervalId);
+        pendingDeleteTimersRef.current.delete(id);
+        try {
+          await api.remove(id);
+          setPendingDeleteIds((current) => current.filter((item) => item !== id));
+          if (activeDeleteToastIdRef.current === id) {
+            activeDeleteToastIdRef.current = null;
+            showToast(`${t("Deleted question")} ${id}`, "warn");
+          } else {
+            showToast(`${t("Deleted question")} ${id}`, "warn");
+          }
+          await refresh();
+        } catch (error) {
+          setPendingDeleteIds((current) => current.filter((item) => item !== id));
+          if (activeDeleteToastIdRef.current === id) {
+            activeDeleteToastIdRef.current = null;
+          }
+          showToast(error.message || t("Delete failed"), "error");
+          await refresh();
+        }
+      }, 10000);
+
+      pendingDeleteTimersRef.current.set(id, { timeoutId, intervalId });
+    },
+    [refresh, showPendingDeleteToast, showToast, t, undoPendingDelete]
   );
 
   const handleEdit = useCallback((question) => {
@@ -352,6 +465,10 @@ export default function App() {
   const createSizeOffset = 3;
   const totalQuestionsLabel = t("Total Questions");
   const foundQuestionsLabel = t("questions found");
+  const visibleQuestions = useMemo(
+    () => state.questions.filter((question) => !pendingDeleteIds.includes(question.id)),
+    [pendingDeleteIds, state.questions]
+  );
 
   const renderMainForm = () => {
     if (state.activeType === TYPES.COMPREHENSIVE) {
@@ -830,7 +947,7 @@ export default function App() {
 
               {state.loading ? (
                 <Spinner />
-              ) : state.questions.length === 0 ? (
+              ) : visibleQuestions.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "80px 20px" }}>
                   <div style={{ color: "var(--text-muted)", fontSize: 18, fontWeight: 700 }}>
                     {t("No questions found")}
@@ -842,9 +959,9 @@ export default function App() {
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                   <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
-                    {state.questions.length} {foundQuestionsLabel}
+                    {visibleQuestions.length} {foundQuestionsLabel}
                   </div>
-                  {state.questions.map((question) => (
+                  {visibleQuestions.map((question) => (
                     <Card
                       key={question.id}
                       question={question}
@@ -1069,7 +1186,9 @@ export default function App() {
           <Toast
             msg={state.toast.msg}
             kind={state.toast.kind}
-            onClose={() => dispatch({ type: "TOAST", value: null })}
+            actionLabel={state.toast.actionLabel}
+            onAction={state.toast.onAction}
+            onClose={closeToast}
           />
         )}
       </div>

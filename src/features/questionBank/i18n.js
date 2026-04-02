@@ -92,6 +92,10 @@ const hindi = {
   "Save failed": "सहेजना विफल हुआ",
   "Delete failed": "हटाना विफल हुआ",
   "Deleted question": "प्रश्न हटाया गया",
+  "Question will be deleted in": "प्रश्न हटाया जाएगा",
+  "Question will be deleted in 10 seconds": "प्रश्न 10 सेकंड में हटाया जाएगा",
+  "Question deletion canceled": "प्रश्न हटाना रद्द किया गया",
+  seconds: "सेकंड में",
   "Cannot reach Spring Boot API at 8082. Check whether it is running.":
     "8082 पर Spring Boot API तक पहुँचा नहीं जा रहा है। कृपया जाँचें कि यह चल रहा है या नहीं।",
   "Question Category view coming soon": "प्रश्न श्रेणी दृश्य जल्द आ रहा है",
@@ -233,6 +237,10 @@ const marathi = {
   "Save failed": "जतन अयशस्वी झाले",
   "Delete failed": "हटवणे अयशस्वी झाले",
   "Deleted question": "प्रश्न हटवला",
+  "Question will be deleted in": "प्रश्न हटवला जाईल",
+  "Question will be deleted in 10 seconds": "प्रश्न 10 सेकंदांत हटवला जाईल",
+  "Question deletion canceled": "प्रश्न हटवणे रद्द केले",
+  seconds: "सेकंदांत",
   "Cannot reach Spring Boot API at 8082. Check whether it is running.":
     "8082 वरील Spring Boot API पर्यंत पोहोचता येत नाही. ते चालू आहे का तपासा.",
   "Question Category view coming soon": "प्रश्न श्रेणी दृश्य लवकरच येईल",

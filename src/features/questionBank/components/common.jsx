@@ -46,7 +46,7 @@ function MoonIcon({ size = 14, color = "currentColor" }) {
   );
 }
 
-export function Toast({ msg, kind, onClose }) {
+export function Toast({ msg, kind, onClose, actionLabel, onAction }) {
   const { t } = useLocalization();
   const background =
     kind === "error" ? "var(--danger)" : kind === "warn" ? "var(--warning)" : "var(--success)";
@@ -71,6 +71,30 @@ export function Toast({ msg, kind, onClose }) {
       }}
     >
       <span>{msg}</span>
+      {actionLabel && onAction && (
+        <button
+          type="button"
+          onClick={onAction}
+          style={{
+            border: "1px solid color-mix(in srgb, var(--surface-bg) 65%, transparent)",
+            borderRadius: 8,
+            cursor: "pointer",
+            fontWeight: 700,
+            fontSize: 13,
+            padding: "6px 12px",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            opacity: 1,
+            transition: "0.15s",
+            background: "var(--surface-bg)",
+            color: "var(--warning)",
+            boxShadow: "0 2px 10px rgba(0,0,0,.12)",
+          }}
+        >
+          {actionLabel}
+        </button>
+      )}
       <button
         onClick={onClose}
         style={{
