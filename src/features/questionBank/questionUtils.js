@@ -155,6 +155,7 @@ export function buildPayload(type, form, meta) {
   const base = {
     type,
     question: form.question,
+    instruction: form.instruction || null,
     explanation: form.explanation || null,
     points: form.points || 1,
     difficulty: meta.difficulty,

@@ -439,15 +439,15 @@ export function Card({ question, onEdit, onDelete, onPreview, isDark = false }) 
         </div>
       </div>
 
-      {question.type !== TYPES.COMPREHENSIVE && (
-        <HtmlContent html={question.question} className="qb-question-text" />
-      )}
-
       {question.instruction && (
         <div className="qb-instruction-box">
-          <div className="qb-instruction-title">{t("INSTRUCTION")}</div>
+        
           <HtmlContent html={question.instruction} className="qb-instruction-text" />
         </div>
+      )}
+
+      {question.type !== TYPES.COMPREHENSIVE && (
+        <HtmlContent html={question.question} className="qb-question-text" />
       )}
 
       {renderQuestionBody(question, isDark, t)}
@@ -522,13 +522,6 @@ export function Preview({ question, onClose, isDark = false }) {
           </button>
         </div>
 
-        {question.type !== TYPES.COMPREHENSIVE && (
-          <HtmlContent
-            html={question.question}
-            style={{ color: "var(--text-primary)", fontSize: 17, lineHeight: 1.7, marginBottom: 20 }}
-          />
-        )}
-
         {question.instruction && (
           <div
             style={{
@@ -547,6 +540,13 @@ export function Preview({ question, onClose, isDark = false }) {
               style={{ color: "var(--text-primary)", fontSize: 14, lineHeight: 1.6 }}
             />
           </div>
+        )}
+
+        {question.type !== TYPES.COMPREHENSIVE && (
+          <HtmlContent
+            html={question.question}
+            style={{ color: "var(--text-primary)", fontSize: 17, lineHeight: 1.7, marginBottom: 20 }}
+          />
         )}
 
         {renderQuestionBody(question, isDark, t)}
