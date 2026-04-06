@@ -1,9 +1,9 @@
-import mcqIcon from "../../assets/type-icons/mcq.png";
-import trueFalseIcon from "../../assets/type-icons/true_false.png";
-import multiCorrectIcon from "../../assets/type-icons/multi_correct.png";
-import matchPairIcon from "../../assets/type-icons/match_pair.png";
-import arrangeSequenceIcon from "../../assets/type-icons/arrange_sequence.png";
-import comprehensiveIcon from "../../assets/type-icons/comprehensive.png";
+import mcqIcon from "../../../assets/type-icons/mcq.png";
+import trueFalseIcon from "../../../assets/type-icons/true_false.png";
+import multiCorrectIcon from "../../../assets/type-icons/multi_correct.png";
+import matchPairIcon from "../../../assets/type-icons/match_pair.png";
+import arrangeSequenceIcon from "../../../assets/type-icons/arrange_sequence.png";
+import comprehensiveIcon from "../../../assets/type-icons/comprehensive.png";
 
 const API_PATH = "/api/v1/questions";
 const configuredBaseUrl = (import.meta.env.VITE_API_BASE_URL || "").trim();

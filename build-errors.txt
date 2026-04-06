@@ -1,0 +1,212 @@
+﻿[36mvite v8.0.0 [32mbuilding client environment for production...[36m[39m
+[2K
+transforming...Γ£ô 52 modules transformed.
+node.exe : [31mΓ£ù[39m Build failed in 79ms
+At C:\Program Files\nodejs\npx.ps1:29 char:3
++   & $NODE_EXE $NPX_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([31mΓ£ù[39m Build 
+fa    iled in 79ms:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[31merror during build:
+[31mBuild failed with 31 errors:
+
+[31m[UNRESOLVED_IMPORT] Error:[0m Could not resolve 
+'../../../localizationContext' in 
+src/features/questionBank/components/controls/ThemeToggle.jsx
+    [38;5;246mΓò¡[0m[38;5;246mΓöÇ[0m[38;5;246m[[0m src/featur
+es/questionBank/components/controls/ThemeToggle.jsx:34:33 
+[38;5;246m][0m
+    [38;5;246mΓöé[0m
+ [38;5;246m34 Γöé[0m [38;5;249mi[0m[38;5;249mm[0m[38;5;249mp
+[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mt[0m[38;5;249m 
+[0m[38;5;249m{[0m[38;5;249m [0m[38;5;249mu[0m[38;5;249ms[0
+m[38;5;249me[0m[38;5;249mL[0m[38;5;249mo[0m[38;5;249mc[0m[
+38;5;249ma[0m[38;5;249ml[0m[38;5;249mi[0m[38;5;249mz[0m[38;
+5;249ma[0m[38;5;249mt[0m[38;5;249mi[0m[38;5;249mo[0m[38;5;2
+49mn[0m[38;5;249m [0m[38;5;249m}[0m[38;5;249m [0m[38;5;249m
+f[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249mm[0m[38;5;249m 
+[0m"../../../localizationContext"[38;5;249m;[0m
+ [38;5;240m   Γöé[0m                                 ΓöÇΓöÇΓöÇΓöÇ
+ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓ
+öÇΓöÇΓöÇΓöÇ  
+ [38;5;240m   Γöé[0m                                             
+   Γò░ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ Module not 
+found.
+ [38;5;240m   Γöé[0m 
+ [38;5;240m   Γöé[0m [38;5;115mHelp[0m: 
+'src/features/questionBank/components/controls/ThemeToggle.jsx' is 
+imported by the following path:
+ [38;5;240m   Γöé[0m         - 
+src/features/questionBank/components/controls/ThemeToggle.jsx
+ [38;5;240m   Γöé[0m         - 
+src/features/questionBank/components/index.js
+ [38;5;240m   Γöé[0m         - src/pages/QuestionBankPage.jsx
+ [38;5;240m   Γöé[0m         - src/App.jsx
+ [38;5;240m   Γöé[0m         - src/main.jsx
+ [38;5;240m   Γöé[0m         - index.html
+[38;5;246mΓöÇΓöÇΓöÇΓöÇΓò»[0m
+
+[31m[UNRESOLVED_IMPORT] Error:[0m Could not resolve 
+'../../../localizationContext' in 
+src/features/questionBank/components/feedback/Spinner.jsx
+   [38;5;246mΓò¡[0m[38;5;246mΓöÇ[0m[38;5;246m[[0m 
+src/features/questionBank/components/feedback/Spinner.jsx:1:33 
+[38;5;246m][0m
+   [38;5;246mΓöé[0m
+ [38;5;246m1 Γöé[0m [38;5;249mi[0m[38;5;249mm[0m[38;5;249mp
+[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mt[0m[38;5;249m 
+[0m[38;5;249m{[0m[38;5;249m [0m[38;5;249mu[0m[38;5;249ms[0
+m[38;5;249me[0m[38;5;249mL[0m[38;5;249mo[0m[38;5;249mc[0m[
+38;5;249ma[0m[38;5;249ml[0m[38;5;249mi[0m[38;5;249mz[0m[38;
+5;249ma[0m[38;5;249mt[0m[38;5;249mi[0m[38;5;249mo[0m[38;5;2
+49mn[0m[38;5;249m [0m[38;5;249m}[0m[38;5;249m [0m[38;5;249m
+f[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249mm[0m[38;5;249m 
+[0m"../../../localizationContext"[38;5;249m;[0m
+ [38;5;240m  Γöé[0m                                 ΓöÇΓöÇΓöÇΓöÇΓ
+öÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö
+ÇΓöÇΓöÇΓöÇ  
+ [38;5;240m  Γöé[0m                                              
+  Γò░ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ Module not 
+found.
+ [38;5;240m  Γöé[0m 
+ [38;5;240m  Γöé[0m [38;5;115mHelp[0m: 
+'src/features/questionBank/components/feedback/Spinner.jsx' is 
+imported by the following path:
+ [38;5;240m  Γöé[0m         - 
+src/features/questionBank/components/feedback/Spinner.jsx
+ [38;5;240m  Γöé[0m         - 
+src/features/questionBank/components/index.js
+ [38;5;240m  Γöé[0m         - src/pages/QuestionBankPage.jsx
+ [38;5;240m  Γöé[0m         - src/App.jsx
+ [38;5;240m  Γöé[0m         - src/main.jsx
+ [38;5;240m  Γöé[0m         - index.html
+[38;5;246mΓöÇΓöÇΓöÇΓò»[0m
+
+[31m[UNRESOLVED_IMPORT] Error:[0m Could not resolve 
+'../../../localizationContext' in 
+src/features/questionBank/components/feedback/Toast.jsx
+   [38;5;246mΓò¡[0m[38;5;246mΓöÇ[0m[38;5;246m[[0m 
+src/features/questionBank/components/feedback/Toast.jsx:2:33 
+[38;5;246m][0m
+   [38;5;246mΓöé[0m
+ [38;5;246m2 Γöé[0m [38;5;249mi[0m[38;5;249mm[0m[38;5;249mp
+[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mt[0m[38;5;249m 
+[0m[38;5;249m{[0m[38;5;249m [0m[38;5;249mu[0m[38;5;249ms[0
+m[38;5;249me[0m[38;5;249mL[0m[38;5;249mo[0m[38;5;249mc[0m[
+38;5;249ma[0m[38;5;249ml[0m[38;5;249mi[0m[38;5;249mz[0m[38;
+5;249ma[0m[38;5;249mt[0m[38;5;249mi[0m[38;5;249mo[0m[38;5;2
+49mn[0m[38;5;249m [0m[38;5;249m}[0m[38;5;249m [0m[38;5;249m
+f[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249mm[0m[38;5;249m 
+[0m"../../../localizationContext"[38;5;249m;[0m
+ [38;5;240m  Γöé[0m                                 ΓöÇΓöÇΓöÇΓöÇΓ
+öÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö
+ÇΓöÇΓöÇΓöÇ  
+ [38;5;240m  Γöé[0m                                              
+  Γò░ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ Module not 
+found.
+ [38;5;240m  Γöé[0m 
+ [38;5;240m  Γöé[0m [38;5;115mHelp[0m: 
+'src/features/questionBank/components/feedback/Toast.jsx' is 
+imported by the following path:
+ [38;5;240m  Γöé[0m         - 
+src/features/questionBank/components/feedback/Toast.jsx
+ [38;5;240m  Γöé[0m         - 
+src/features/questionBank/components/index.js
+ [38;5;240m  Γöé[0m         - src/pages/QuestionBankPage.jsx
+ [38;5;240m  Γöé[0m         - src/App.jsx
+ [38;5;240m  Γöé[0m         - src/main.jsx
+ [38;5;240m  Γöé[0m         - index.html
+[38;5;246mΓöÇΓöÇΓöÇΓò»[0m
+
+[31m[UNRESOLVED_IMPORT] Error:[0m Could not resolve 
+'../../../localizationContext' in 
+src/features/questionBank/components/forms/ComprehensiveForm.jsx
+   [38;5;246mΓò¡[0m[38;5;246mΓöÇ[0m[38;5;246m[[0m src/feature
+s/questionBank/components/forms/ComprehensiveForm.jsx:2:33 
+[38;5;246m][0m
+   [38;5;246mΓöé[0m
+ [38;5;246m2 Γöé[0m [38;5;249mi[0m[38;5;249mm[0m[38;5;249mp
+[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mt[0m[38;5;249m 
+[0m[38;5;249m{[0m[38;5;249m [0m[38;5;249mu[0m[38;5;249ms[0
+m[38;5;249me[0m[38;5;249mL[0m[38;5;249mo[0m[38;5;249mc[0m[
+38;5;249ma[0m[38;5;249ml[0m[38;5;249mi[0m[38;5;249mz[0m[38;
+5;249ma[0m[38;5;249mt[0m[38;5;249mi[0m[38;5;249mo[0m[38;5;2
+49mn[0m[38;5;249m [0m[38;5;249m}[0m[38;5;249m [0m[38;5;249m
+f[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249mm[0m[38;5;249m 
+[0m"../../../localizationContext"[38;5;249m;[0m
+ [38;5;240m  Γöé[0m                                 ΓöÇΓöÇΓöÇΓöÇΓ
+öÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö
+ÇΓöÇΓöÇΓöÇ  
+ [38;5;240m  Γöé[0m                                              
+  Γò░ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ Module not 
+found.
+ [38;5;240m  Γöé[0m 
+ [38;5;240m  Γöé[0m [38;5;115mHelp[0m: 
+'src/features/questionBank/components/forms/ComprehensiveForm.jsx' 
+is imported by the following path:
+ [38;5;240m  Γöé[0m         - 
+src/features/questionBank/components/forms/ComprehensiveForm.jsx
+ [38;5;240m  Γöé[0m         - 
+src/features/questionBank/components/index.js
+ [38;5;240m  Γöé[0m         - src/pages/QuestionBankPage.jsx
+ [38;5;240m  Γöé[0m         - src/App.jsx
+ [38;5;240m  Γöé[0m         - src/main.jsx
+ [38;5;240m  Γöé[0m         - index.html
+[38;5;246mΓöÇΓöÇΓöÇΓò»[0m
+
+[31m[UNRESOLVED_IMPORT] Error:[0m Could not resolve 
+'../../../questionUtils' in 
+src/features/questionBank/components/forms/ComprehensiveForm.jsx
+   [38;5;246mΓò¡[0m[38;5;246mΓöÇ[0m[38;5;246m[[0m src/feature
+s/questionBank/components/forms/ComprehensiveForm.jsx:3:35 
+[38;5;246m][0m
+   [38;5;246mΓöé[0m
+ [38;5;246m3 Γöé[0m [38;5;249mi[0m[38;5;249mm[0m[38;5;249mp
+[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mt[0m[38;5;249m 
+[0m[38;5;249m{[0m[38;5;249m [0m[38;5;249mc[0m[38;5;249mr[0
+m[38;5;249me[0m[38;5;249ma[0m[38;5;249mt[0m[38;5;249me[0m[
+38;5;249mS[0m[38;5;249mu[0m[38;5;249mb[0m[38;5;249mQ[0m[38;
+5;249mu[0m[38;5;249me[0m[38;5;249ms[0m[38;5;249mt[0m[38;5;2
+49mi[0m[38;5;249mo[0m[38;5;249mn[0m[38;5;249m 
+[0m[38;5;249m}[0m[38;5;249m [0m[38;5;249mf[0m[38;5;249mr[0
+m[38;5;249mo[0m[38;5;249mm[0m[38;5;249m 
+[0m"../../../questionUtils"[38;5;249m;[0m
+ [38;5;240m  Γöé[0m                                   ΓöÇΓöÇΓöÇΓö
+ÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+ [38;5;240m  Γöé[0m                                              
+ Γò░ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ Module not found.
+ [38;5;240m  Γöé[0m 
+ [38;5;240m  Γöé[0m [38;5;115mHelp[0m: 
+'src/features/questionBank/components/forms/ComprehensiveForm.jsx' 
+is imported by the following path:
+ [38;5;240m  Γöé[0m         - 
+src/features/questionBank/components/forms/ComprehensiveForm.jsx
+ [38;5;240m  Γöé[0m         - 
+src/features/questionBank/components/index.js
+ [38;5;240m  Γöé[0m         - src/pages/QuestionBankPage.jsx
+ [38;5;240m  Γöé[0m         - src/App.jsx
+ [38;5;240m  Γöé[0m         - src/main.jsx
+ [38;5;240m  Γöé[0m         - index.html
+[38;5;246mΓöÇΓöÇΓöÇΓò»[0m
+
+...[31m
+    at aggregateBindingErrorsIntoJsError (file:///C:/Generic%20QBMS
+/FrontEnd/genericQBMSUI/node_modules/rolldown/dist/shared/error-CP8
+smW_P.mjs:48:18)
+    at unwrapBindingResult (file:///C:/Generic%20QBMS/FrontEnd/gene
+ricQBMSUI/node_modules/rolldown/dist/shared/error-CP8smW_P.mjs:18:1
+28)
+    at #build (file:///C:/Generic%20QBMS/FrontEnd/genericQBMSUI/nod
+e_modules/rolldown/dist/shared/rolldown-build-4YnQkA76.mjs:3311:34)
+    at async buildEnvironment (file:///C:/Generic%20QBMS/FrontEnd/g
+enericQBMSUI/node_modules/vite/dist/node/chunks/node.js:32794:64)
+    at async Object.build (file:///C:/Generic%20QBMS/FrontEnd/gener
+icQBMSUI/node_modules/vite/dist/node/chunks/node.js:33216:19)
+    at async Object.buildApp (file:///C:/Generic%20QBMS/FrontEnd/ge
+nericQBMSUI/node_modules/vite/dist/node/chunks/node.js:33213:153)
+    at async CAC.<anonymous> (file:///C:/Generic%20QBMS/FrontEnd/ge
+nericQBMSUI/node_modules/vite/dist/node/cli.js:778:3) {
+  errors: [Getter/Setter]
+}[39m

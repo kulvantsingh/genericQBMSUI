@@ -1,4 +1,4 @@
-import { BASE_URL, TYPES } from "./constants";
+import { BASE_URL, TYPES } from "../utils/constants";
 
 const KNOWN_TYPES = new Set(Object.values(TYPES));
 

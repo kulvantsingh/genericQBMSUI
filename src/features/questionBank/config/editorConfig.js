@@ -14,7 +14,7 @@ import {
   Base64UploadAdapter,
   Alignment
 } from "ckeditor5";
-import MathlivePlugin from "../../plugins/MathlivePlugin";
+import MathlivePlugin from "../../../plugins/MathlivePlugin";
 
 const editorPlugins = [
   Essentials, Paragraph, Bold, Italic, Underline,

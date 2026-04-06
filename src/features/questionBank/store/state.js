@@ -1,5 +1,5 @@
-import { TYPES } from "./constants";
-import { blank } from "./questionUtils";
+import { TYPES } from "../utils/constants";
+import { blank } from "../utils/questionUtils";
 
 function cloneForm(value) {
   return JSON.parse(JSON.stringify(value));
