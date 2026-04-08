@@ -157,6 +157,11 @@
   font-weight: 700;
 }
 
+.sidebar-row-btn.active {
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-accent);
+}
+
 .sidebar-row-btn:hover {
   background: color-mix(in srgb, var(--surface-bg) 70%, transparent);
 }

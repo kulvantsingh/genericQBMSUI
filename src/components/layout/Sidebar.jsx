@@ -6,11 +6,11 @@ export function Sidebar({
   setIsSidebarCollapsed,
   t,
   goListView,
+  goCategoryView,
   toggleSidebarSection,
   sidebarSections,
   view,
   goCreateView,
-  showToast,
 }) {
   return (
     <aside
@@ -46,7 +46,7 @@ export function Sidebar({
         <button
           type="button"
           onClick={goListView}
-          className="sidebar-row-btn sidebar-row-muted"
+          className={`sidebar-row-btn sidebar-row-muted ${view === "list" ? "active" : ""}`}
           style={{
             padding: isSidebarCollapsed ? "10px 8px" : "10px 6px",
             justifyContent: isSidebarCollapsed ? "center" : "flex-start",
@@ -81,7 +81,7 @@ export function Sidebar({
         </button>
 
         {!isSidebarCollapsed && sidebarSections.question && (
-          <div className="sidebar-submenu">
+            <div className="sidebar-submenu">
             {[
               {
                 key: "create-question",
@@ -90,16 +90,10 @@ export function Sidebar({
                 action: goCreateView,
               },
               {
-                key: "all-question",
-                label: t("All Question"),
-                active: view === "list",
-                action: goListView,
-              },
-              {
                 key: "question-category",
                 label: t("Question Category"),
-                active: false,
-                action: () => showToast(t("Question Category view coming soon"), "warn"),
+                active: view === "category",
+                action: goCategoryView,
               },
             ].map((item) => (
               <button

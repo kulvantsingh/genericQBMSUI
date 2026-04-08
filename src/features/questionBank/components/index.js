@@ -15,3 +15,4 @@ export { ComprehensiveForm } from "./forms/ComprehensiveForm";
 // Views
 export { Card } from "./views/Card";
 export { Preview } from "./views/Preview";
+export { QuestionCategoryView } from "./views/QuestionCategoryView";

@@ -28,6 +28,7 @@ import {
   ComprehensiveForm,
   Field,
   Preview,
+  QuestionCategoryView,
   Spinner,
   StatCard,
   Toast,
@@ -52,6 +53,9 @@ export function QuestionBankPage({
   });
   const [meta, setMeta] = useState(DEFAULT_META);
   const [pendingDeleteIds, setPendingDeleteIds] = useState([]);
+  const [categorySubject, setCategorySubject] = useState("");
+  const [categoryQuestions, setCategoryQuestions] = useState([]);
+  const [categoryLoading, setCategoryLoading] = useState(false);
   const toastTimerRef = useRef(null);
   const pendingDeleteTimersRef = useRef(new Map());
   const activeDeleteToastIdRef = useRef(null);
@@ -149,6 +153,45 @@ export function QuestionBankPage({
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  const categorySubjects = useMemo(
+    () =>
+      SUBJECTS.map((subject) => ({
+        value: subject,
+        count: Number(state.stats.bySubject?.[subject]) || 0,
+      })),
+    [state.stats.bySubject]
+  );
+
+  useEffect(() => {
+    if (categorySubject) return;
+    const nextSubject = categorySubjects.find((item) => item.count > 0)?.value || SUBJECTS[0];
+    if (nextSubject) {
+      setCategorySubject(nextSubject);
+    }
+  }, [categorySubject, categorySubjects]);
+
+  const loadCategoryQuestions = useCallback(
+    async (subject) => {
+      if (!subject) return;
+
+      setCategoryLoading(true);
+      try {
+        const questions = await api.getAll({ subject });
+        setCategoryQuestions(questions.map(normalise));
+      } catch {
+        showToast(t("Cannot reach Spring Boot API at 8082. Check whether it is running."), "error");
+      } finally {
+        setCategoryLoading(false);
+      }
+    },
+    [showToast, t]
+  );
+
+  useEffect(() => {
+    if (state.view !== "category" || !categorySubject) return;
+    loadCategoryQuestions(categorySubject);
+  }, [categorySubject, loadCategoryQuestions, state.view]);
 
   useEffect(() => {
     setActiveFieldId(null);
@@ -261,6 +304,9 @@ export function QuestionBankPage({
             showToast(`${t("Deleted question")} ${id}`, "warn");
           }
           await refresh();
+          if (state.view === "category" && categorySubject) {
+            await loadCategoryQuestions(categorySubject);
+          }
         } catch (error) {
           setPendingDeleteIds((current) => current.filter((item) => item !== id));
           if (activeDeleteToastIdRef.current === id) {
@@ -268,12 +314,24 @@ export function QuestionBankPage({
           }
           showToast(error.message || t("Delete failed"), "error");
           await refresh();
+          if (state.view === "category" && categorySubject) {
+            await loadCategoryQuestions(categorySubject);
+          }
         }
       }, 10000);
 
       pendingDeleteTimersRef.current.set(id, { timeoutId, intervalId });
     },
-    [refresh, showPendingDeleteToast, showToast, t, undoPendingDelete]
+    [
+      categorySubject,
+      loadCategoryQuestions,
+      refresh,
+      showPendingDeleteToast,
+      showToast,
+      state.view,
+      t,
+      undoPendingDelete,
+    ]
   );
 
   const handleEdit = useCallback((question) => {
@@ -306,6 +364,10 @@ export function QuestionBankPage({
     dispatch({ type: "VIEW", value: "create" });
   }, []);
 
+  const goCategoryView = useCallback(() => {
+    dispatch({ type: "VIEW", value: "category" });
+  }, []);
+
   const toggleSidebarSection = useCallback((section) => {
     setSidebarSections((current) => ({ ...current, [section]: !current[section] }));
   }, []);
@@ -315,6 +377,10 @@ export function QuestionBankPage({
   const visibleQuestions = useMemo(
     () => state.questions.filter((question) => !pendingDeleteIds.includes(question.id)),
     [pendingDeleteIds, state.questions]
+  );
+  const visibleCategoryQuestions = useMemo(
+    () => categoryQuestions.filter((question) => !pendingDeleteIds.includes(question.id)),
+    [categoryQuestions, pendingDeleteIds]
   );
 
   const renderMainForm = () => {
@@ -452,11 +518,11 @@ export function QuestionBankPage({
         setIsSidebarCollapsed={setIsSidebarCollapsed}
         t={t}
         goListView={goListView}
+        goCategoryView={goCategoryView}
         toggleSidebarSection={toggleSidebarSection}
         sidebarSections={sidebarSections}
         view={state.view}
         goCreateView={goCreateView}
-        showToast={showToast}
       />
 
       <div
@@ -549,38 +615,6 @@ export function QuestionBankPage({
                     style={{ ...inputStyle, width: "100%" }}
                   />
                 </div>
-                {[
-                  {
-                    key: "difficulty",
-                    options: [["", t("All Levels")], ...DIFFS.map((item) => [item, t(item)])],
-                  },
-                  {
-                    key: "subject",
-                    options: [["", t("All Subjects")], ...SUBJECTS.map((item) => [item, t(item)])],
-                  },
-                ].map(({ key, options }) => (
-                  <select
-                    key={key}
-                    value={state.filters[key]}
-                    onChange={(event) => handleFilter(key, event.target.value)}
-                    style={{
-                      background: "var(--input-bg)",
-                      border: "1px solid var(--border-color)",
-                      borderRadius: 10,
-                      padding: "10px 14px",
-                      color: "var(--text-secondary)",
-                      fontSize: 14,
-                      outline: "none",
-                      cursor: "pointer",
-                    }}
-                  >
-                    {options.map(([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                ))}
               </div>
 
               {state.loading ? (
@@ -612,6 +646,21 @@ export function QuestionBankPage({
                 </div>
               )}
             </>
+          )}
+
+          {state.view === "category" && categorySubject && (
+            <QuestionCategoryView
+              t={t}
+              themeMode={themeMode}
+              subjects={categorySubjects}
+              selectedSubject={categorySubject}
+              onSelectSubject={setCategorySubject}
+              questions={visibleCategoryQuestions}
+              loading={categoryLoading}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onPreview={setPreview}
+            />
           )}
 
           {state.view === "create" && (
